@@ -22,6 +22,7 @@ We rely entirely on mathlib's `extDeriv` and do not redefine it.
 noncomputable section
 
 open Topology Filter Set
+open scoped Topology
 
 namespace DiffForm
 
@@ -57,6 +58,21 @@ theorem extd_smul (c : ℝ) (ω : DiffForm d n) :
   unfold extd
   change _root_.extDeriv (fun y => c • ω y) x = c • _root_.extDeriv ω x
   exact _root_.extDeriv_smul c ω
+
+/-- Exterior derivatives agree at a point when the forms agree in a neighborhood of that point. -/
+theorem extd_congr_of_eventuallyEq {ω₁ ω₂ : DiffForm d n} {x : ℝSpace d}
+    (h : ω₁ =ᶠ[𝓝 x] ω₂) :
+    extd ω₁ x = extd ω₂ x := by
+  unfold extd
+  exact h.extDeriv_eq
+
+/-- Exterior derivatives agree on a set when the forms agree in a neighborhood of every point of
+that set. -/
+theorem extd_congr_on_of_eventuallyEq {ω₁ ω₂ : DiffForm d n} {S : Set (ℝSpace d)}
+    (h : ∀ x ∈ S, ω₁ =ᶠ[𝓝 x] ω₂) :
+    ∀ x ∈ S, extd ω₁ x = extd ω₂ x := by
+  intro x hx
+  exact extd_congr_of_eventuallyEq (h x hx)
 
 /-- The exterior derivative commutes pointwise with pullback. -/
 theorem extd_pullback_apply {m : ℕ} (f : ℝSpace m → ℝSpace d) (ω : DiffForm d n)
