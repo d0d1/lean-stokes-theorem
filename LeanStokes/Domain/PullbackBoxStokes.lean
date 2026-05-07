@@ -41,6 +41,38 @@ theorem halfSpaceBoxStokes_pullback_of_vanishesOnArtificialFaces
     (CubeStokes.toCoordNForm_pullback_isSmooth f ω hf hω)
     hvanish
 
+/-- Local half-space box Stokes for a smooth pullback when the pulled-back form is pointwise
+zero on every artificial face point-set. -/
+theorem halfSpaceBoxStokes_pullback_of_eq_zero_on_boxArtificialFaces
+    (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
+    (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hf : ContDiff ℝ ⊤ f) (hω : ContDiff ℝ ⊤ ω)
+    (hzero : ∀ y ∈ boxArtificialFaces a b, DiffForm.pullback f ω y = 0) :
+    DiffForm.integral (DiffForm.pullback f (DiffForm.extd ω)) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f ω)
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) :=
+  halfSpaceBoxStokes_pullback_of_vanishesOnArtificialFaces f ω a b hle ha0 hf hω
+    (vanishesOnBoxArtificialFaces_of_eq_zero_on_boxArtificialFaces
+      (DiffForm.pullback f ω) a b hzero)
+
+/-- Local half-space box Stokes for a smooth pullback when the pulled-back form's pointwise
+support is disjoint from every artificial face point-set. -/
+theorem halfSpaceBoxStokes_pullback_of_disjoint_support_boxArtificialFaces
+    (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
+    (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hf : ContDiff ℝ ⊤ f) (hω : ContDiff ℝ ⊤ ω)
+    (hdisj : Disjoint (Function.support (DiffForm.pullback f ω)) (boxArtificialFaces a b)) :
+    DiffForm.integral (DiffForm.pullback f (DiffForm.extd ω)) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f ω)
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) :=
+  halfSpaceBoxStokes_pullback_of_vanishesOnArtificialFaces f ω a b hle ha0 hf hω
+    (vanishesOnBoxArtificialFaces_of_disjoint_support_boxArtificialFaces
+      (DiffForm.pullback f ω) a b hdisj)
+
 end CubeStokes
 
 end
