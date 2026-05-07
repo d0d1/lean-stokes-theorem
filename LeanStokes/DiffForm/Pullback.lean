@@ -31,6 +31,23 @@ def pullback (f : ℝSpace n → ℝSpace m) (η : DiffForm m k) : DiffForm n k 
     pullback f η x = (η (f x)).compContinuousLinearMap (fderiv ℝ f x) :=
   rfl
 
+/-- Pointwise congruence for pullbacks.  Equality of map values alone is not sufficient:
+`DiffForm.pullback` also depends on the total Fréchet derivative. -/
+theorem pullback_congr_apply {f g : ℝSpace n → ℝSpace m} (η : DiffForm m k)
+    {x : ℝSpace n}
+    (hval : f x = g x) (hderiv : fderiv ℝ f x = fderiv ℝ g x) :
+    pullback f η x = pullback g η x := by
+  simp [pullback, hval, hderiv]
+
+/-- Pullbacks agree on a set when both the maps and their total derivatives agree there. -/
+theorem pullback_congr_on {f g : ℝSpace n → ℝSpace m} (η : DiffForm m k)
+    {S : Set (ℝSpace n)}
+    (hval : ∀ x ∈ S, f x = g x)
+    (hderiv : ∀ x ∈ S, fderiv ℝ f x = fderiv ℝ g x) :
+    ∀ x ∈ S, pullback f η x = pullback g η x := by
+  intro x hx
+  exact pullback_congr_apply η (hval x hx) (hderiv x hx)
+
 /-- Pointwise composition law for differential-form pullback. -/
 theorem pullback_comp_apply
     (f : ℝSpace m → ℝSpace n) (g : ℝSpace k → ℝSpace m)
