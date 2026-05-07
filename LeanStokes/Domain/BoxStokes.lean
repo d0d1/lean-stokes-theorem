@@ -39,6 +39,19 @@ variable {n : ℕ}
 
 /-- Box Stokes with the bulk side expressed as `DiffForm.integral (DiffForm.extd ω)`.
 
+This version exposes the split hypotheses of the underlying cubical theorem: differentiability of
+the alternating-map-valued form and smoothness of its coordinate coefficients. -/
+theorem boxStokes_diffForm_of_differentiable (ω : DiffForm (n + 1) n)
+    (a b : ℝSpace (n + 1)) (hle : a ≤ b)
+    (hω_diff : Differentiable ℝ ω)
+    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm ω)) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+      CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b := by
+  simpa [DiffForm.integral, DiffForm.topCoeff, DiffForm.extd, DiffForm.stdBasis] using
+    CubeStokes.stokes_extDeriv ω a b hle hω_diff hcoord
+
+/-- Box Stokes with the bulk side expressed as `DiffForm.integral (DiffForm.extd ω)`.
+
 The boundary side is still the existing cubical coordinate-boundary integral; later local-domain
 infrastructure can bridge that side to boundary charts under additional hypotheses. -/
 theorem boxStokes_diffForm (ω : DiffForm (n + 1) n)
@@ -46,8 +59,8 @@ theorem boxStokes_diffForm (ω : DiffForm (n + 1) n)
     (hω : ContDiff ℝ ⊤ ω) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) =
       CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b := by
-  simpa [DiffForm.integral, DiffForm.topCoeff, DiffForm.extd, DiffForm.stdBasis] using
-    CubeStokes.stokes_extDeriv_smooth ω a b hle hω
+  exact boxStokes_diffForm_of_differentiable ω a b hle
+    (hω.differentiable (by simp)) (CubeStokes.toCoordNForm_smooth ω hω)
 
 /-- The low `x₀ = 0` cubical face contribution is the standard half-space boundary integral.
 
@@ -260,6 +273,22 @@ theorem halfSpaceBoxStokes_of_vanishesOnArtificialFaces
         (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
              (b ∘ Fin.succAbove (0 : Fin (n + 1)))) := by
   rw [CubeStokes.boxStokes_diffForm ω a b hle hω,
+    CubeStokes.bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
+      ω a b ha0 hvanish]
+
+/-- Local Stokes on a half-space box from differentiability of the form, smooth coordinate
+coefficients, and pointwise vanishing of all artificial box-face integrands. -/
+theorem halfSpaceBoxStokes_of_vanishesOnArtificialFaces_of_differentiable
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hω_diff : Differentiable ℝ ω)
+    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm ω))
+    (hvanish : VanishesOnBoxArtificialFaces ω a b) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n ω
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) := by
+  rw [CubeStokes.boxStokes_diffForm_of_differentiable ω a b hle hω_diff hcoord,
     CubeStokes.bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
       ω a b ha0 hvanish]
 
