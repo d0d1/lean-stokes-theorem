@@ -106,6 +106,41 @@ theorem integral_image_eq_integral_pullback_of_det_nonneg_of_differentiableAt
   integral_image_eq_integral_pullback_of_det_nonneg η hs
     (fun x hx => (hf' x hx).hasFDerivAt.hasFDerivWithinAt) hf hdet
 
+/-- Change of variables for top-form integrals under a map whose global derivative agrees with
+the within derivative on the source and has nonpositive determinant there. -/
+theorem integral_image_eq_neg_integral_pullback_of_det_nonpos
+    {f : ℝSpace d → ℝSpace d} {s : Set (ℝSpace d)} (η : DiffForm d d)
+    (hs : MeasurableSet s)
+    (hfderiv : ∀ x ∈ s, HasFDerivWithinAt f (fderiv ℝ f x) s x)
+    (hf : Set.InjOn f s)
+    (hdet : ∀ x ∈ s, LinearMap.det (fderiv ℝ f x : ℝSpace d →ₗ[ℝ] ℝSpace d) ≤ 0) :
+    integral η (f '' s) = -integral (pullback f η) s := by
+  unfold integral
+  rw [MeasureTheory.integral_image_eq_integral_abs_det_fderiv_smul (μ := volume) hs hfderiv hf,
+    ← MeasureTheory.integral_neg]
+  apply MeasureTheory.setIntegral_congr_fun hs
+  intro x hx
+  dsimp
+  have hdet' : (fderiv ℝ f x).det ≤ 0 := by
+    simpa using hdet x hx
+  rw [abs_of_nonpos hdet']
+  change -(fderiv ℝ f x).det * topCoeff η (f x) =
+    -topCoeff (pullback f η) x
+  rw [topCoeff_pullback]
+  ring
+
+/-- A differentiability-at version of
+`integral_image_eq_neg_integral_pullback_of_det_nonpos`. -/
+theorem integral_image_eq_neg_integral_pullback_of_det_nonpos_of_differentiableAt
+    {f : ℝSpace d → ℝSpace d} {s : Set (ℝSpace d)} (η : DiffForm d d)
+    (hs : MeasurableSet s)
+    (hf' : ∀ x ∈ s, DifferentiableAt ℝ f x)
+    (hf : Set.InjOn f s)
+    (hdet : ∀ x ∈ s, LinearMap.det (fderiv ℝ f x : ℝSpace d →ₗ[ℝ] ℝSpace d) ≤ 0) :
+    integral η (f '' s) = -integral (pullback f η) s :=
+  integral_image_eq_neg_integral_pullback_of_det_nonpos η hs
+    (fun x hx => (hf' x hx).hasFDerivAt.hasFDerivWithinAt) hf hdet
+
 end DiffForm
 
 end
