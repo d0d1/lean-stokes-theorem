@@ -170,6 +170,21 @@ theorem bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
   rw [hhigh0, hsucc, zero_sub, add_zero]
   exact CubeStokes.neg_lowFaceIntegral_zero_eq_halfSpaceBoundaryIntegral ω a b ha0
 
+/-- Local Stokes on a half-space box, assuming all artificial box-face integrands vanish
+pointwise. -/
+theorem halfSpaceBoxStokes_of_vanishesOnArtificialFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hvanish : VanishesOnBoxArtificialFaces ω a b) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n ω
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) := by
+  rw [CubeStokes.boxStokes_diffForm ω a b hle hω,
+    CubeStokes.bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
+      ω a b ha0 hvanish]
+
 end CubeStokes
 
 end
