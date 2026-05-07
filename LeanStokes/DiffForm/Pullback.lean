@@ -14,6 +14,8 @@ Defines the Euclidean pullback of differential forms using mathlib's
 
 noncomputable section
 
+open scoped Topology
+
 namespace DiffForm
 
 variable {m n k l : ℕ}
@@ -47,6 +49,12 @@ theorem pullback_congr_on {f g : ℝSpace n → ℝSpace m} (η : DiffForm m k)
     ∀ x ∈ S, pullback f η x = pullback g η x := by
   intro x hx
   exact pullback_congr_apply η (hval x hx) (hderiv x hx)
+
+/-- Pullbacks agree at a point when the maps agree in a neighborhood of that point. -/
+theorem pullback_congr_of_eventuallyEq {f g : ℝSpace n → ℝSpace m}
+    (η : DiffForm m k) {x : ℝSpace n} (h : f =ᶠ[𝓝 x] g) :
+    pullback f η x = pullback g η x :=
+  pullback_congr_apply η h.self_of_nhds h.fderiv_eq
 
 /-- Pointwise composition law for differential-form pullback. -/
 theorem pullback_comp_apply
