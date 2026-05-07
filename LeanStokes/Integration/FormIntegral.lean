@@ -21,7 +21,7 @@ Defines integration of top-degree forms (n-forms on ℝⁿ) via Lebesgue measure
 noncomputable section
 
 open MeasureTheory Topology Filter Set MeasureTheory.Measure
-open scoped ENNReal
+open scoped ENNReal BigOperators
 
 namespace DiffForm
 
@@ -47,6 +47,11 @@ def topCoeff (ω : DiffForm d d) : ℝSpace d → ℝ :=
 @[simp] theorem topCoeff_smul_apply (c : ℝ) (ω : DiffForm d d) (x : ℝSpace d) :
     topCoeff (c • ω) x = c * topCoeff ω x := by
   simp [topCoeff, smul_eq_mul]
+
+@[simp] theorem topCoeff_finset_sum {ι : Type*} (s : Finset ι)
+    (ω : ι → DiffForm d d) (x : ℝSpace d) :
+    topCoeff (∑ i ∈ s, ω i) x = ∑ i ∈ s, topCoeff (ω i) x := by
+  simp [topCoeff]
 
 /-- Evaluating a continuous top-degree form on the standard basis gives a continuous coefficient. -/
 theorem continuous_topCoeff {ω : DiffForm d d} (hω : Continuous ω) :
@@ -78,6 +83,15 @@ theorem integral_smul (c : ℝ) (ω : DiffForm d d) (S : Set (ℝSpace d)) :
     integral (c • ω) S = c * integral ω S := by
   simp only [integral, topCoeff, Pi.smul_apply, ContinuousAlternatingMap.smul_apply, smul_eq_mul]
   exact MeasureTheory.integral_smul c _
+
+/-- Integration commutes with finite sums of top forms, under integrability of each coefficient on
+the integration set. -/
+theorem integral_finset_sum {ι : Type*} (s : Finset ι) (ω : ι → DiffForm d d)
+    (S : Set (ℝSpace d))
+    (hω : ∀ i ∈ s, IntegrableOn (topCoeff (ω i)) S volume) :
+    integral (∑ i ∈ s, ω i) S = ∑ i ∈ s, integral (ω i) S := by
+  simp only [integral, topCoeff_finset_sum]
+  exact MeasureTheory.integral_finset_sum s hω
 
 end DiffForm
 

@@ -17,6 +17,7 @@ an exterior-derivative product rule or construct partitions of unity.
 noncomputable section
 
 open Topology Filter Set
+open scoped BigOperators
 
 namespace DiffForm
 
@@ -54,6 +55,23 @@ theorem fsmul_add_right (f : ℝSpace d → ℝ) (ω₁ ω₂ : DiffForm d n) :
     fsmul f (ω₁ + ω₂) = fsmul f ω₁ + fsmul f ω₂ := by
   funext x
   simp [fsmul, smul_add]
+
+/-- Multiplication by a finite sum of scalar functions is the finite sum of localized forms. -/
+theorem fsmul_finset_sum_left {ι : Type*} (s : Finset ι)
+    (f : ι → ℝSpace d → ℝ) (ω : DiffForm d n) :
+    fsmul (fun x => ∑ i ∈ s, f i x) ω = ∑ i ∈ s, fsmul (f i) ω := by
+  funext x
+  simp [fsmul, Finset.sum_smul]
+
+/-- If a finite family of scalar functions sums to one on `U`, the corresponding localized forms
+sum back to the original form on `U`. -/
+theorem finset_sum_fsmul_eqOn_of_sum_eq_one {ι : Type*} (s : Finset ι)
+    (f : ι → ℝSpace d → ℝ) (ω : DiffForm d n) {U : Set (ℝSpace d)}
+    (h : ∀ x ∈ U, (∑ i ∈ s, f i x) = 1) :
+    Set.EqOn (∑ i ∈ s, fsmul (f i) ω) ω U := by
+  intro x hx
+  rw [← congr_fun (fsmul_finset_sum_left s f ω) x]
+  simp [fsmul, h x hx]
 
 @[simp] theorem topCoeff_fsmul (f : ℝSpace d → ℝ) (ω : DiffForm d d) (x : ℝSpace d) :
     topCoeff (fsmul f ω) x = f x * topCoeff ω x := by
