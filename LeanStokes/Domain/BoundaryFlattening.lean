@@ -358,6 +358,38 @@ theorem exists_halfSpaceFlatteningChart_at_boundary [NeZero d] {x : ℝSpace d}
   rcases M.exists_nonzero_fderiv_stdBasis hx with ⟨i, hi⟩
   exact ⟨i, hi, M.mem_halfSpaceFlatteningChart_source i x hi⟩
 
+/-- Every boundary point admits a first-coordinate-facing flattening chart and an open
+neighborhood inside its source where the selected partial derivative has stable sign. -/
+theorem exists_halfSpaceFlatteningChart_sign_neighborhood_at_boundary [NeZero d]
+    {x : ℝSpace d} (hx : x ∈ M.boundary) :
+    ∃ i : Fin d,
+    ∃ h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0,
+    ∃ U : Set (ℝSpace d),
+      IsOpen U ∧ x ∈ U ∧ U ⊆ (M.halfSpaceFlatteningChart i x h).source ∧
+        ((0 < M.partialDeriv i x ∧ ∀ y ∈ U, 0 < M.partialDeriv i y) ∨
+          (M.partialDeriv i x < 0 ∧ ∀ y ∈ U, M.partialDeriv i y < 0)) := by
+  rcases M.exists_partialDeriv_sign_neighborhood_at_boundary hx with
+    ⟨i, U₀, hU₀o, hxU₀, hsign⟩
+  rcases hsign with ⟨hpos, hU₀pos⟩ | ⟨hneg, hU₀neg⟩
+  · have h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0 := by
+      simpa [SmoothDomain.partialDeriv] using ne_of_gt hpos
+    let U : Set (ℝSpace d) := U₀ ∩ (M.halfSpaceFlatteningChart i x h).source
+    refine ⟨i, h, U, hU₀o.inter (M.halfSpaceFlatteningChart i x h).open_source,
+      ⟨hxU₀, M.mem_halfSpaceFlatteningChart_source i x h⟩, ?_, Or.inl ⟨hpos, ?_⟩⟩
+    · intro y hy
+      exact hy.2
+    · intro y hy
+      exact hU₀pos y hy.1
+  · have h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0 := by
+      simpa [SmoothDomain.partialDeriv] using ne_of_lt hneg
+    let U : Set (ℝSpace d) := U₀ ∩ (M.halfSpaceFlatteningChart i x h).source
+    refine ⟨i, h, U, hU₀o.inter (M.halfSpaceFlatteningChart i x h).open_source,
+      ⟨hxU₀, M.mem_halfSpaceFlatteningChart_source i x h⟩, ?_, Or.inr ⟨hneg, ?_⟩⟩
+    · intro y hy
+      exact hy.2
+    · intro y hy
+      exact hU₀neg y hy.1
+
 end SmoothDomain
 
 end
