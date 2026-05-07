@@ -57,6 +57,7 @@ import LeanStokes.Domain.BoundaryChart
 import LeanStokes.Domain.JacobianSign
 import LeanStokes.Domain.BoundaryChartIntegral
 import LeanStokes.Domain.BoundaryChartPatch
+import LeanStokes.Domain.BoundaryChartPatchIntegral
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain
 import LeanStokes.SingularCubeStokes.BdryBdry
