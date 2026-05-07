@@ -428,6 +428,35 @@ theorem exists_halfSpaceFlatteningChart_sign_neighborhood_at_boundary [NeZero d]
     · intro y hy
       exact hU₀neg y hy.1
 
+/-- Every boundary point admits a first-coordinate-facing flattening chart and an open
+neighborhood inside its source where the full flattening Jacobian has stable nonzero sign. -/
+theorem exists_halfSpaceFlatteningChart_det_sign_neighborhood_at_boundary [NeZero d]
+    {x : ℝSpace d} (hx : x ∈ M.boundary) :
+    ∃ i : Fin d,
+    ∃ h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0,
+    ∃ U : Set (ℝSpace d),
+      IsOpen U ∧ x ∈ U ∧ U ⊆ (M.halfSpaceFlatteningChart i x h).source ∧
+        ((∀ y ∈ U,
+            0 < LinearMap.det
+              (fderiv ℝ (M.halfSpaceFlatteningMap i) y : ℝSpace d →ₗ[ℝ] ℝSpace d)) ∨
+          (∀ y ∈ U,
+            LinearMap.det
+              (fderiv ℝ (M.halfSpaceFlatteningMap i) y : ℝSpace d →ₗ[ℝ] ℝSpace d) < 0)) := by
+  rcases M.exists_halfSpaceFlatteningChart_sign_neighborhood_at_boundary hx with
+    ⟨i, h, U, hUo, hxU, hUsrc, hsign⟩
+  refine ⟨i, h, U, hUo, hxU, hUsrc, ?_⟩
+  rcases hsign with ⟨_, hUpos⟩ | ⟨_, hUneg⟩
+  · by_cases hi0 : i = 0
+    · exact Or.inr fun y hy =>
+        M.det_fderiv_halfSpaceFlatteningMap_neg_of_eq_zero hi0 (hUpos y hy)
+    · exact Or.inl fun y hy =>
+        M.det_fderiv_halfSpaceFlatteningMap_pos_of_ne_zero hi0 (hUpos y hy)
+  · by_cases hi0 : i = 0
+    · exact Or.inl fun y hy =>
+        M.det_fderiv_halfSpaceFlatteningMap_pos_of_eq_zero hi0 (hUneg y hy)
+    · exact Or.inr fun y hy =>
+        M.det_fderiv_halfSpaceFlatteningMap_neg_of_ne_zero hi0 (hUneg y hy)
+
 end SmoothDomain
 
 end
