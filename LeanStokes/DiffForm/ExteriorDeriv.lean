@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.DiffForm.Basic
+import LeanStokes.DiffForm.Pullback
 
 /-!
 # Exterior Derivative
@@ -56,6 +57,25 @@ theorem extd_smul (c : ℝ) (ω : DiffForm d n) :
   unfold extd
   change _root_.extDeriv (fun y => c • ω y) x = c • _root_.extDeriv ω x
   exact _root_.extDeriv_smul c ω
+
+/-- The exterior derivative commutes pointwise with pullback. -/
+theorem extd_pullback_apply {m : ℕ} (f : ℝSpace m → ℝSpace d) (ω : DiffForm d n)
+    (x : ℝSpace m)
+    (hω : DifferentiableAt ℝ ω (f x))
+    (hf : ContDiffAt ℝ ⊤ f x) :
+    extd (pullback f ω) x = pullback f (extd ω) x := by
+  unfold extd pullback
+  exact _root_.extDeriv_pullback hω hf (by simp)
+
+/-- The exterior derivative commutes with smooth pullback. -/
+theorem extd_pullback {m : ℕ} (f : ℝSpace m → ℝSpace d) (ω : DiffForm d n)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hf : ContDiff ℝ ⊤ f) :
+    extd (pullback f ω) = pullback f (extd ω) := by
+  funext x
+  exact extd_pullback_apply f ω x
+    ((hω.differentiable (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt)
+    hf.contDiffAt
 
 end DiffForm
 
