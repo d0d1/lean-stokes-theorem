@@ -19,6 +19,7 @@ boundary integral, solve localization, or prove global domain Stokes.
 noncomputable section
 
 open Set MeasureTheory
+open scoped Topology
 
 namespace SmoothDomain
 namespace BoundaryChartPatch
@@ -148,6 +149,138 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_
     P.halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differentiable
       ω a b hle ha0 hω hmodel_diff hcoord
       (by simpa [e] using hdiffBox) hvanish hSsub
+
+/-- If a set in the certified patch has flattening image a model box, then that model box lies in
+the certified inverse-chart patch. -/
+theorem model_box_subset_patch_of_flattening_image_eq
+    (P : BoundaryChartPatch M x) {U : Set (ℝSpace (n + 1))}
+    {a b : ℝSpace (n + 1)}
+    (hUsub : U ⊆ P.U)
+    (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b) :
+    Icc a b ⊆ { z |
+      z ∈ (M.halfSpaceFlatteningChart P.i x P.h).target ∧
+        (M.halfSpaceFlatteningChart P.i x P.h).symm z ∈ P.U } := by
+  let e := M.halfSpaceFlatteningChart P.i x P.h
+  intro z hz
+  have hzimg : z ∈ M.halfSpaceFlatteningMap P.i '' U := by
+    simpa [himage] using hz
+  rcases hzimg with ⟨y, hyU, rfl⟩
+  have hyP : y ∈ P.U := hUsub hyU
+  have hysrc : y ∈ e.source := P.subset_source hyP
+  constructor
+  · simpa [e] using e.map_source hysrc
+  · have hleft : e.symm (e y) = y := e.left_inv hysrc
+    have hleft' :
+        (M.halfSpaceFlatteningChart P.i x P.h).symm
+          (M.halfSpaceFlatteningMap P.i y) = y := by
+      simpa [e] using hleft
+    rw [hleft']
+    exact hyP
+
+/-- If a certified patch set has flattening image a model half-space box, then the true boundary
+tail of that box lies in the patch-local boundary coordinate domain. -/
+theorem tailBox_subset_localCoordDomain_of_flattening_image_eq
+    (P : BoundaryChartPatch M x) {U : Set (ℝSpace (n + 1))}
+    (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hUsub : U ⊆ P.U)
+    (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b) :
+    Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+        (b ∘ Fin.succAbove (0 : Fin (n + 1))) ⊆ P.localCoordDomain :=
+  P.tailBox_subset_localCoordDomain_of_model_box_subset a b hle ha0
+    (P.model_box_subset_patch_of_flattening_image_eq hUsub himage)
+
+/-- Local Stokes on an original patch set whose flattening image is a model half-space box.
+
+The theorem combines signed top-form change of variables, the model-box Stokes bridge, and the
+local boundary chart integral.  It remains local to one certified patch and keeps the analytic
+regularity and artificial-face hypotheses for the model pullback explicit. -/
+theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
+    (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
+    {U : Set (ℝSpace (n + 1))} (a b : ℝSpace (n + 1))
+    (hUmeas : MeasurableSet U) (hUsub : U ⊆ P.U)
+    (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b)
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hmodel_diff :
+      Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
+    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
+      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω)))
+    (hvanish : CubeStokes.VanishesOnBoxArtificialFaces
+      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω) a b) :
+    DiffForm.integral (DiffForm.extd ω) U =
+      P.localBoundaryIntegral ω
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1))))
+        (P.tailBox_subset_localCoordDomain_of_flattening_image_eq a b hle ha0 hUsub himage) := by
+  let e := M.halfSpaceFlatteningChart P.i x P.h
+  let F : ℝSpace (n + 1) → ℝSpace (n + 1) := M.halfSpaceFlatteningMap P.i
+  let η : DiffForm (n + 1) (n + 1) := DiffForm.pullback e.symm (DiffForm.extd ω)
+  let S : Set (ℝSpace n) :=
+    Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+        (b ∘ Fin.succAbove (0 : Fin (n + 1)))
+  let hboxsub := P.model_box_subset_patch_of_flattening_image_eq hUsub himage
+  let hSsub := P.tailBox_subset_localCoordDomain_of_model_box_subset a b hle ha0 hboxsub
+  have hcov :
+      DiffForm.integral η (Icc a b) =
+        P.sign.domainSign * DiffForm.integral (DiffForm.pullback F η) U := by
+    simpa [η, F, himage] using
+      P.integral_image_eq_domainSign_mul_integral_pullback_on hUmeas hUsub η
+  have hpull :
+      DiffForm.integral (DiffForm.pullback F η) U =
+        DiffForm.integral (DiffForm.extd ω) U := by
+    exact DiffForm.integral_congr
+      (DiffForm.pullback F η) (DiffForm.extd ω) hUmeas
+      (fun y hy => by
+        have hyP : y ∈ P.U := hUsub hy
+        have hysrc : y ∈ e.source := P.subset_source hyP
+        have htarget : F y ∈ e.target := by
+          simpa [F, e] using e.map_source hysrc
+        have hsymmU : e.symm (F y) ∈ P.U := by
+          have hleft : e.symm (e y) = y := e.left_inv hysrc
+          have hleft' : e.symm (F y) = y := by
+            simpa [F, e] using hleft
+          rw [hleft']
+          exact hyP
+        have hsymmdiff : DifferentiableAt ℝ e.symm (F y) :=
+          (P.contDiffAt_halfSpaceFlatteningChart_symm
+            (by simpa [F, e] using htarget) (by simpa [F, e] using hsymmU)
+          ).differentiableAt (by simp : (⊤ : WithTop ℕ∞) ≠ 0)
+        have hFdiff : DifferentiableAt ℝ F y := by
+          simpa [F] using M.differentiableAt_halfSpaceFlatteningMap P.i y
+        have hcomp :
+            DiffForm.pullback F η y =
+              DiffForm.pullback (e.symm ∘ F) (DiffForm.extd ω) y := by
+          simpa [η] using
+            DiffForm.pullback_comp_apply e.symm F (DiffForm.extd ω) hsymmdiff hFdiff
+        have hevent : (e.symm ∘ F) =ᶠ[𝓝 y] id := by
+          simpa [F, e, Function.comp_def] using e.eventually_left_inverse hysrc
+        have hid :
+            DiffForm.pullback (e.symm ∘ F) (DiffForm.extd ω) y =
+              DiffForm.pullback id (DiffForm.extd ω) y :=
+          DiffForm.pullback_congr_of_eventuallyEq (DiffForm.extd ω) hevent
+        calc
+          DiffForm.pullback F η y =
+              DiffForm.pullback (e.symm ∘ F) (DiffForm.extd ω) y := hcomp
+          _ = DiffForm.pullback id (DiffForm.extd ω) y := hid
+          _ = DiffForm.extd ω y := by
+              ext v
+              simp [DiffForm.pullback])
+  have hbox :
+      DiffForm.integral η (Icc a b) =
+        P.sign.domainSign * P.localBoundaryIntegral ω S hSsub := by
+    simpa [η, e, S, hboxsub, hSsub] using
+      P.halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_subset
+        ω a b hle ha0 hω hmodel_diff hcoord hvanish hboxsub
+  have heq :
+      P.sign.domainSign * DiffForm.integral (DiffForm.extd ω) U =
+        P.sign.domainSign * P.localBoundaryIntegral ω S hSsub := by
+    rw [← hpull, ← hcov, hbox]
+  have hresult :
+      DiffForm.integral (DiffForm.extd ω) U =
+        P.localBoundaryIntegral ω S hSsub :=
+    mul_left_cancel₀ (JacobianSign.domainSign_ne_zero P.sign) heq
+  simpa [S, hSsub, hboxsub, tailBox_subset_localCoordDomain_of_flattening_image_eq] using hresult
 
 end BoundaryChartPatch
 end SmoothDomain
