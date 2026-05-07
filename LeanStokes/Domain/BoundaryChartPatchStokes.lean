@@ -5,6 +5,7 @@ Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.BoundaryChartPatchModelIntegral
 import LeanStokes.Domain.BoxStokes
+import LeanStokes.DiffForm.Localization
 
 /-!
 # Boundary Chart Patch Stokes Bridges
@@ -281,6 +282,53 @@ theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
         P.localBoundaryIntegral ω S hSsub :=
     mul_left_cancel₀ (JacobianSign.domainSign_ne_zero P.sign) heq
   simpa [S, hSsub, hboxsub, tailBox_subset_localCoordDomain_of_flattening_image_eq] using hresult
+
+/-- Local Stokes on an original patch set for a scalar-localized form.
+
+The scalar support condition is stated in model coordinates, so it only discharges artificial-face
+vanishing for the half-space box.  This theorem does not use an exterior-derivative product rule:
+it applies the local theorem to the single form `χ • ω`. -/
+theorem integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_model_box_of_disjoint_support_scalar
+    (P : BoundaryChartPatch M x) (χ : ℝSpace (n + 1) → ℝ) (ω : DiffForm (n + 1) n)
+    {U : Set (ℝSpace (n + 1))} (a b : ℝSpace (n + 1))
+    (hUmeas : MeasurableSet U) (hUsub : U ⊆ P.U)
+    (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b)
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hχ : ContDiff ℝ ⊤ χ) (hω : ContDiff ℝ ⊤ ω)
+    (hmodel_diff :
+      Differentiable ℝ
+        (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm (DiffForm.fsmul χ ω)))
+    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
+      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm
+        (DiffForm.fsmul χ ω))))
+    (hdisj : Disjoint
+      (Function.support (χ ∘ (M.halfSpaceFlatteningChart P.i x P.h).symm))
+      (CubeStokes.boxArtificialFaces a b)) :
+    DiffForm.integral (DiffForm.extd (DiffForm.fsmul χ ω)) U =
+      P.localBoundaryIntegral (DiffForm.fsmul χ ω)
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1))))
+        (P.tailBox_subset_localCoordDomain_of_flattening_image_eq a b hle ha0 hUsub himage) := by
+  let e := M.halfSpaceFlatteningChart P.i x P.h
+  have hχω : ContDiff ℝ ⊤ (DiffForm.fsmul χ ω) :=
+    DiffForm.isSmooth_fsmul hχ hω
+  have hdisj_form :
+      Disjoint
+        (Function.support (DiffForm.pullback e.symm (DiffForm.fsmul χ ω)))
+        (CubeStokes.boxArtificialFaces a b) := by
+    rw [DiffForm.pullback_fsmul]
+    exact DiffForm.disjoint_support_fsmul_of_disjoint_support_left
+      (by simpa [e] using hdisj)
+  have hvanish : CubeStokes.VanishesOnBoxArtificialFaces
+      (DiffForm.pullback e.symm (DiffForm.fsmul χ ω)) a b :=
+    CubeStokes.vanishesOnBoxArtificialFaces_of_disjoint_support_boxArtificialFaces
+      (DiffForm.pullback e.symm (DiffForm.fsmul χ ω)) a b hdisj_form
+  simpa [e] using
+    P.integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
+      (DiffForm.fsmul χ ω) a b hUmeas hUsub himage hle ha0 hχω
+      (by simpa [e] using hmodel_diff)
+      (by simpa [e] using hcoord)
+      (by simpa [e] using hvanish)
 
 end BoundaryChartPatch
 end SmoothDomain
