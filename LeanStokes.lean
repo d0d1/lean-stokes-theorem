@@ -50,6 +50,7 @@ import LeanStokes.Integration.FormIntegral
 import LeanStokes.Integration.Pullback
 import LeanStokes.Integration.OrientedIntegral
 import LeanStokes.Integration.ExteriorDeriv
+import LeanStokes.Integration.Localization
 import LeanStokes.Domain.SmoothDomain
 import LeanStokes.Domain.DomainIntegral
 import LeanStokes.Domain.HalfSpace

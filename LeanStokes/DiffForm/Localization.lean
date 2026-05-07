@@ -17,7 +17,7 @@ an exterior-derivative product rule or construct partitions of unity.
 noncomputable section
 
 open Topology Filter Set
-open scoped BigOperators
+open scoped BigOperators Topology
 
 namespace DiffForm
 
@@ -73,11 +73,30 @@ theorem finset_sum_fsmul_eqOn_of_sum_eq_one {ι : Type*} (s : Finset ι)
   rw [← congr_fun (fsmul_finset_sum_left s f ω) x]
   simp [fsmul, h x hx]
 
+/-- If scalar weights sum to one in a neighborhood of `x`, the corresponding finite sum of
+localized forms agrees with the original form in a neighborhood of `x`. -/
+theorem finset_sum_fsmul_eventuallyEq_of_sum_eventuallyEq_one {ι : Type*} (s : Finset ι)
+    (f : ι → ℝSpace d → ℝ) (ω : DiffForm d n) {x : ℝSpace d}
+    (h : (fun y => ∑ i ∈ s, f i y) =ᶠ[𝓝 x] fun _ => 1) :
+    (∑ i ∈ s, fsmul (f i) ω) =ᶠ[𝓝 x] ω := by
+  filter_upwards [h] with y hy
+  rw [← congr_fun (fsmul_finset_sum_left s f ω) y]
+  simp [fsmul, hy]
+
+/-- Setwise version of `finset_sum_fsmul_eventuallyEq_of_sum_eventuallyEq_one`. -/
+theorem finset_sum_fsmul_eventuallyEq_on_of_sum_eventuallyEq_one {ι : Type*}
+    (s : Finset ι) (f : ι → ℝSpace d → ℝ) (ω : DiffForm d n) {S : Set (ℝSpace d)}
+    (h : ∀ x ∈ S, (fun y => ∑ i ∈ s, f i y) =ᶠ[𝓝 x] fun _ => 1) :
+    ∀ x ∈ S, (∑ i ∈ s, fsmul (f i) ω) =ᶠ[𝓝 x] ω := by
+  intro x hx
+  exact finset_sum_fsmul_eventuallyEq_of_sum_eventuallyEq_one s f ω (h x hx)
+
 @[simp] theorem topCoeff_fsmul (f : ℝSpace d → ℝ) (ω : DiffForm d d) (x : ℝSpace d) :
     topCoeff (fsmul f ω) x = f x * topCoeff ω x := by
   simp [fsmul, topCoeff, smul_eq_mul]
 
-/-- Pointwise scalar multiplication by a continuous scalar function preserves continuity of forms. -/
+/-- Pointwise scalar multiplication by a continuous scalar function preserves continuity of
+forms. -/
 theorem continuous_fsmul {f : ℝSpace d → ℝ} {ω : DiffForm d n}
     (hf : Continuous f) (hω : Continuous ω) :
     Continuous (fsmul f ω) := by
