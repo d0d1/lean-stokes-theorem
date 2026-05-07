@@ -76,6 +76,23 @@ theorem halfSpaceBoundaryIntegral_pullback_eq_neg_integral_pullback_comp {m : �
       -DiffForm.integral (DiffForm.pullback (f ∘ halfSpaceBoundaryParam n) ω) S := by
   rw [halfSpaceBoundaryIntegral_eq_neg, halfSpaceBoundaryPullback_pullback f ω hf]
 
+/-- Boundary integral of a pulled-back form, requiring differentiability of the outer map only at
+the boundary-parametrized points of the measurable integration set. -/
+theorem halfSpaceBoundaryIntegral_pullback_eq_neg_integral_pullback_comp_on {m : ℕ}
+    (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
+    {S : Set (ℝSpace n)} (hS : MeasurableSet S)
+    (hf : ∀ y ∈ S, DifferentiableAt ℝ f (halfSpaceBoundaryParam n y)) :
+    halfSpaceBoundaryIntegral n (DiffForm.pullback f ω) S =
+      -DiffForm.integral (DiffForm.pullback (f ∘ halfSpaceBoundaryParam n) ω) S := by
+  rw [halfSpaceBoundaryIntegral_eq_neg]
+  congr 1
+  exact DiffForm.integral_congr
+    (halfSpaceBoundaryPullback n (DiffForm.pullback f ω))
+    (DiffForm.pullback (f ∘ halfSpaceBoundaryParam n) ω) hS
+    (fun y hy =>
+      DiffForm.pullback_comp_apply f (halfSpaceBoundaryParam n) ω
+        (hf y hy) ((halfSpaceBoundaryParam n).differentiableAt))
+
 /-- Pullback to the model boundary commutes with scalar multiplication. -/
 theorem halfSpaceBoundaryPullback_smul (n : ℕ) (c : ℝ) (ω : DiffForm (n + 1) n) :
     halfSpaceBoundaryPullback n (c • ω) = c • halfSpaceBoundaryPullback n ω := by
