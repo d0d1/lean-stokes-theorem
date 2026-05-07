@@ -99,6 +99,12 @@ theorem contDiff_flatteningMap (i : Fin d) :
   · simpa [flatteningMap, hji] using
       ((contDiff_apply ℝ ℝ j) : ContDiff ℝ ⊤ fun x : ℝSpace d => x j)
 
+/-- The first-coordinate-facing flattening map is smooth. -/
+theorem contDiff_halfSpaceFlatteningMap [NeZero d] (i : Fin d) :
+    ContDiff ℝ ⊤ (M.halfSpaceFlatteningMap i) :=
+  (Coordinate.moveToZero i : ℝSpace d →L[ℝ] ℝSpace d).contDiff.comp
+    (M.contDiff_flatteningMap i)
+
 /-- Derivative of the coordinate replacement map. -/
 theorem fderiv_flatteningMap (i : Fin d) (x : ℝSpace d) :
     fderiv ℝ (M.flatteningMap i) x =
