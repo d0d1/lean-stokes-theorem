@@ -1,0 +1,17 @@
+/.lake
+/build
+*.olean
+*.ilean
+*.trace
+*.hash
+__pycache__/
+*.pyc
+.DS_Store
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
