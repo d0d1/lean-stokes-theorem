@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.DiffForm.Basic
+import Mathlib.LinearAlgebra.StdBasis
 import Mathlib.Topology.Compactness.Compact
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
@@ -94,6 +95,42 @@ theorem exists_nonzero_partialDeriv_neighborhood {i : Fin d} {x : ℝSpace d}
   · have hneg : M.partialDeriv i x < 0 := lt_of_le_of_ne (le_of_not_gt hpos) h
     rcases M.exists_neg_partialDeriv_neighborhood hneg with ⟨U, hUo, hxU, hU⟩
     exact ⟨U, hUo, hxU, fun y hy => ne_of_lt (hU y hy)⟩
+
+/-- At every boundary point, some selected coordinate derivative is nonzero. -/
+theorem exists_nonzero_partialDeriv_at_boundary {x : ℝSpace d} (hx : x ∈ M.boundary) :
+    ∃ i : Fin d, M.partialDeriv i x ≠ 0 := by
+  by_contra h
+  apply M.regular x hx
+  push Not at h
+  have hraw : ∀ i : Fin d, fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) = 0 := by
+    intro i
+    simpa [partialDeriv] using h i
+  apply ContinuousLinearMap.ext
+  intro v
+  calc
+    fderiv ℝ M.φ x v =
+        fderiv ℝ M.φ x
+          (∑ i, ((Pi.basisFun ℝ (Fin d)).repr v) i • (Pi.basisFun ℝ (Fin d)) i) := by
+      rw [(Pi.basisFun ℝ (Fin d)).sum_repr v]
+    _ = ∑ i, ((Pi.basisFun ℝ (Fin d)).repr v) i •
+          fderiv ℝ M.φ x ((Pi.basisFun ℝ (Fin d)) i) := by
+      simp [map_sum]
+    _ = 0 := by
+      simp [hraw]
+
+/-- At every boundary point, some selected coordinate derivative has stable sign on an open
+neighborhood. -/
+theorem exists_partialDeriv_sign_neighborhood_at_boundary {x : ℝSpace d} (hx : x ∈ M.boundary) :
+    ∃ i : Fin d, ∃ U : Set (ℝSpace d), IsOpen U ∧ x ∈ U ∧
+      ((0 < M.partialDeriv i x ∧ ∀ y ∈ U, 0 < M.partialDeriv i y) ∨
+        (M.partialDeriv i x < 0 ∧ ∀ y ∈ U, M.partialDeriv i y < 0)) := by
+  rcases M.exists_nonzero_partialDeriv_at_boundary hx with ⟨i, hi⟩
+  by_cases hpos : 0 < M.partialDeriv i x
+  · rcases M.exists_pos_partialDeriv_neighborhood hpos with ⟨U, hUo, hxU, hU⟩
+    exact ⟨i, U, hUo, hxU, Or.inl ⟨hpos, hU⟩⟩
+  · have hneg : M.partialDeriv i x < 0 := lt_of_le_of_ne (le_of_not_gt hpos) hi
+    rcases M.exists_neg_partialDeriv_neighborhood hneg with ⟨U, hUo, hxU, hU⟩
+    exact ⟨i, U, hUo, hxU, Or.inr ⟨hneg, hU⟩⟩
 
 /-- The carrier `{x | φ x ≤ 0}` is closed. -/
 theorem isClosed_carrier : IsClosed M.carrier := by

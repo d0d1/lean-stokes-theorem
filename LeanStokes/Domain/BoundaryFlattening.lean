@@ -340,21 +340,7 @@ theorem mem_int_iff_halfSpaceFlatteningChart_mem [NeZero d] (i : Fin d) (x : ℝ
 /-- At every boundary point, some standard coordinate has nonzero derivative. -/
 theorem exists_nonzero_fderiv_stdBasis {x : ℝSpace d} (hx : x ∈ M.boundary) :
     ∃ i : Fin d, fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0 := by
-  by_contra h
-  apply M.regular x hx
-  push Not at h
-  apply ContinuousLinearMap.ext
-  intro v
-  calc
-    fderiv ℝ M.φ x v =
-        fderiv ℝ M.φ x
-          (∑ i, ((Pi.basisFun ℝ (Fin d)).repr v) i • (Pi.basisFun ℝ (Fin d)) i) := by
-      rw [(Pi.basisFun ℝ (Fin d)).sum_repr v]
-    _ = ∑ i, ((Pi.basisFun ℝ (Fin d)).repr v) i •
-          fderiv ℝ M.φ x ((Pi.basisFun ℝ (Fin d)) i) := by
-      simp [map_sum]
-    _ = 0 := by
-      simp [h]
+  simpa [SmoothDomain.partialDeriv] using M.exists_nonzero_partialDeriv_at_boundary hx
 
 /-- Every boundary point admits a flattening chart for a suitable coordinate. -/
 theorem exists_flatteningChart_at_boundary {x : ℝSpace d} (hx : x ∈ M.boundary) :
