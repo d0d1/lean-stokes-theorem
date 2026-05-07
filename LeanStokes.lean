@@ -35,6 +35,7 @@ import LeanStokes.CubeStokes.Naturality
 -- Bridge infrastructure to mathlib differential forms (sorry-free)
 import LeanStokes.DiffForm.Basic
 import LeanStokes.DiffForm.ExteriorDeriv
+import LeanStokes.DiffForm.Pullback
 
 -- Smooth singular cubical Stokes (extension layer)
 import LeanStokes.SingularCubeStokes.Defs
@@ -43,6 +44,7 @@ import LeanStokes.SingularCubeStokes.Theorem
 
 -- Integration and domain infrastructure (sorry-free supporting definitions)
 import LeanStokes.Integration.FormIntegral
+import LeanStokes.Integration.Pullback
 import LeanStokes.Integration.OrientedIntegral
 import LeanStokes.Domain.SmoothDomain
 import LeanStokes.Domain.HalfSpace
