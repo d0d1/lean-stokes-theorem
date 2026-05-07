@@ -48,6 +48,7 @@ import LeanStokes.Integration.FormIntegral
 import LeanStokes.Integration.Pullback
 import LeanStokes.Integration.OrientedIntegral
 import LeanStokes.Domain.SmoothDomain
+import LeanStokes.Domain.DomainIntegral
 import LeanStokes.Domain.HalfSpace
 import LeanStokes.Domain.Coordinate
 import LeanStokes.Domain.BoundaryOrient
