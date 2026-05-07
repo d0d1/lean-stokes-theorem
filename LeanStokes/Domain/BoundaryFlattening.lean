@@ -123,6 +123,28 @@ theorem fderiv_flatteningMap (i : Fin d) (x : ℝSpace d) :
         ((contDiff_apply ℝ ℝ j).differentiable
           (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
 
+/-- The flattening map has derivative equal to its `fderiv`. -/
+theorem hasFDerivAt_flatteningMap (i : Fin d) (x : ℝSpace d) :
+    HasFDerivAt (M.flatteningMap i) (fderiv ℝ (M.flatteningMap i) x) x :=
+  ((M.contDiff_flatteningMap i).differentiable (by simp)).differentiableAt.hasFDerivAt
+
+/-- The first-coordinate-facing flattening map has derivative obtained by composing the coordinate
+swap with the derivative of the coordinate replacement map. -/
+theorem hasFDerivAt_halfSpaceFlatteningMap [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    HasFDerivAt (M.halfSpaceFlatteningMap i)
+      ((Coordinate.moveToZero i : ℝSpace d →L[ℝ] ℝSpace d).comp
+        (fderiv ℝ (M.flatteningMap i) x)) x := by
+  simpa [halfSpaceFlatteningMap, Function.comp_def] using
+    (Coordinate.moveToZero i : ℝSpace d →L[ℝ] ℝSpace d).hasFDerivAt.comp x
+      (M.hasFDerivAt_flatteningMap i x)
+
+/-- Derivative of the first-coordinate-facing flattening map. -/
+theorem fderiv_halfSpaceFlatteningMap [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    fderiv ℝ (M.halfSpaceFlatteningMap i) x =
+      ((Coordinate.moveToZero i : ℝSpace d →L[ℝ] ℝSpace d).comp
+        (fderiv ℝ (M.flatteningMap i) x)) := by
+  exact (M.hasFDerivAt_halfSpaceFlatteningMap i x).fderiv
+
 /-- Matrix of the flattening derivative in the standard basis.
 
 It is the identity matrix with the selected row replaced by the row of `-dφ`. -/
@@ -173,6 +195,31 @@ theorem det_fderiv_flatteningMap_ne_zero_iff (i : Fin d) (x : ℝSpace d) :
   rw [M.det_fderiv_flatteningMap]
   exact neg_ne_zero
 
+/-- Determinant of the first-coordinate-facing flattening derivative. -/
+theorem det_fderiv_halfSpaceFlatteningMap [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    LinearMap.det
+      (fderiv ℝ (M.halfSpaceFlatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d) =
+      (Equiv.Perm.sign (Equiv.swap (0 : Fin d) i) : ℝ) *
+        (-fderiv ℝ M.φ x (Pi.single i (1 : ℝ))) := by
+  rw [M.fderiv_halfSpaceFlatteningMap]
+  change LinearMap.det
+      (((Coordinate.moveToZero i : ℝSpace d →L[ℝ] ℝSpace d).toLinearMap).comp
+        (fderiv ℝ (M.flatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d)) =
+      (Equiv.Perm.sign (Equiv.swap (0 : Fin d) i) : ℝ) *
+        (-fderiv ℝ M.φ x (Pi.single i (1 : ℝ)))
+  rw [LinearMap.det_comp, Coordinate.det_moveToZero, M.det_fderiv_flatteningMap]
+
+/-- The first-coordinate-facing flattening derivative has nonzero determinant when the selected
+partial derivative is nonzero. -/
+theorem det_fderiv_halfSpaceFlatteningMap_ne_zero [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    LinearMap.det
+      (fderiv ℝ (M.halfSpaceFlatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d) ≠ 0 := by
+  rw [M.det_fderiv_halfSpaceFlatteningMap]
+  have hswap : (Equiv.Perm.sign (Equiv.swap (0 : Fin d) i) : ℝ) ≠ 0 := by
+    simp
+  exact mul_ne_zero hswap (neg_ne_zero.mpr h)
+
 /-- The continuous linear equivalence supplied by a flattening derivative whose selected partial
 derivative is nonzero. -/
 def flatteningFDerivEquiv (i : Fin d) (x : ℝSpace d)
@@ -186,11 +233,6 @@ def flatteningFDerivEquiv (i : Fin d) (x : ℝSpace d)
     (M.flatteningFDerivEquiv i x h : ℝSpace d →L[ℝ] ℝSpace d) =
       fderiv ℝ (M.flatteningMap i) x := by
   simp [flatteningFDerivEquiv]
-
-/-- The flattening map has derivative equal to its `fderiv`. -/
-theorem hasFDerivAt_flatteningMap (i : Fin d) (x : ℝSpace d) :
-    HasFDerivAt (M.flatteningMap i) (fderiv ℝ (M.flatteningMap i) x) x :=
-  ((M.contDiff_flatteningMap i).differentiable (by simp)).differentiableAt.hasFDerivAt
 
 /-- Derivative witness for the flattening map using the generated continuous linear equivalence. -/
 theorem hasFDerivAt_flatteningMap_equiv (i : Fin d) (x : ℝSpace d)

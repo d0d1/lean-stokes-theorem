@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.HalfSpace
+import Mathlib.LinearAlgebra.Matrix.Permutation
 import Mathlib.Topology.Algebra.Module.Equiv
 
 /-!
@@ -59,6 +60,34 @@ def moveToZeroHomeomorph [NeZero d] (i : Fin d) : ℝSpace d ≃ₜ ℝSpace d :
 @[simp] theorem moveToZeroHomeomorph_apply [NeZero d] (i j : Fin d) (x : ℝSpace d) :
     moveToZeroHomeomorph i x j = x ((Equiv.swap (0 : Fin d) i) j) :=
   rfl
+
+/-- Matrix of the coordinate swap in the standard basis. -/
+theorem toMatrix_moveToZero [NeZero d] (i : Fin d) :
+    LinearMap.toMatrix (Pi.basisFun ℝ (Fin d)) (Pi.basisFun ℝ (Fin d))
+      (moveToZero i : ℝSpace d →ₗ[ℝ] ℝSpace d) =
+    (Equiv.swap (0 : Fin d) i).permMatrix ℝ := by
+  ext j k
+  rw [LinearMap.toMatrix_apply]
+  by_cases h : (Equiv.swap (0 : Fin d) i) j = k
+  · simp [moveToZero, Equiv.Perm.permMatrix, Equiv.toPEquiv_apply, Pi.single_apply, h]
+  · simp [moveToZero, Equiv.Perm.permMatrix, Equiv.toPEquiv_apply, Pi.single_apply, h]
+
+/-- Determinant of the coordinate swap. -/
+theorem det_moveToZero [NeZero d] (i : Fin d) :
+    LinearMap.det (moveToZero i : ℝSpace d →ₗ[ℝ] ℝSpace d) =
+      (Equiv.Perm.sign (Equiv.swap (0 : Fin d) i) : ℝ) := by
+  rw [← LinearMap.det_toMatrix (Pi.basisFun ℝ (Fin d))
+    (moveToZero i : ℝSpace d →ₗ[ℝ] ℝSpace d)]
+  rw [toMatrix_moveToZero]
+  exact Matrix.det_permutation (R := ℝ) (Equiv.swap (0 : Fin d) i)
+
+/-- The coordinate swap has nonzero determinant. -/
+theorem det_moveToZero_ne_zero [NeZero d] (i : Fin d) :
+    LinearMap.det (moveToZero i : ℝSpace d →ₗ[ℝ] ℝSpace d) ≠ 0 := by
+  rw [det_moveToZero]
+  by_cases hi : (0 : Fin d) = i
+  · simp [hi]
+  · simp [Equiv.Perm.sign_swap hi]
 
 /-- Moving coordinate `i` to coordinate `0` converts `0 ≤ x i` to the standard half-space. -/
 theorem mem_halfSpace_moveToZero_iff_coord_nonneg [NeZero d] (i : Fin d) (x : ℝSpace d) :
