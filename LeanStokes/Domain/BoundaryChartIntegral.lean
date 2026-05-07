@@ -5,6 +5,7 @@ Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.BoundaryChart
 import LeanStokes.Domain.JacobianSign
+import LeanStokes.DiffForm.Localization
 import LeanStokes.Integration.FormIntegral
 
 /-!
@@ -22,6 +23,9 @@ local/global Stokes theorem.
 
 noncomputable section
 
+open MeasureTheory
+open scoped BigOperators
+
 namespace SmoothDomain
 
 variable {n : ℕ}
@@ -36,6 +40,29 @@ theorem boundaryChartPullback_smul (M : SmoothDomain (n + 1)) (i : Fin (n + 1))
   funext y
   ext v
   simp [boundaryChartPullback, DiffForm.pullback]
+
+/-- Pullback through a local boundary chart commutes with finite sums. -/
+theorem boundaryChartPullback_finset_sum {ι : Type*} (M : SmoothDomain (n + 1))
+    (i : Fin (n + 1)) (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0)
+    (s : Finset ι) (ω : ι → DiffForm (n + 1) n) :
+    boundaryChartPullback M i x h (∑ j ∈ s, ω j) =
+      ∑ j ∈ s, boundaryChartPullback M i x h (ω j) := by
+  funext y
+  ext v
+  simp [boundaryChartPullback, DiffForm.pullback]
+
+/-- Pullback through a local boundary chart commutes with scalar localization, with the scalar
+restricted to the boundary parametrization. -/
+theorem boundaryChartPullback_fsmul (M : SmoothDomain (n + 1)) (i : Fin (n + 1))
+    (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0)
+    (χ : ℝSpace (n + 1) → ℝ) (ω : DiffForm (n + 1) n) :
+    boundaryChartPullback M i x h (DiffForm.fsmul χ ω) =
+      DiffForm.fsmul (χ ∘ boundaryChartParam M i x h) (boundaryChartPullback M i x h ω) := by
+  funext y
+  ext v
+  simp [boundaryChartPullback, DiffForm.pullback, DiffForm.fsmul, Function.comp_def]
 
 /-- Local boundary integral through one chart, with a discrete determinant-sign branch.
 
@@ -77,6 +104,21 @@ theorem boundaryChartIntegralWithSign_smul (σ : JacobianSign)
   rw [boundaryChartIntegralWithSign, boundaryChartPullback_smul, DiffForm.integral_smul,
     boundaryChartIntegralWithSign]
   ring
+
+/-- Local signed boundary chart integration commutes with finite sums, assuming each pulled-back
+top coefficient is integrable on the coordinate set. -/
+theorem boundaryChartIntegralWithSign_finset_sum {ι : Type*} (σ : JacobianSign)
+    (M : SmoothDomain (n + 1)) (i : Fin (n + 1)) (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0)
+    (s : Finset ι) (ω : ι → DiffForm (n + 1) n) (S : Set (ℝSpace n))
+    (hω : ∀ j ∈ s,
+      IntegrableOn (DiffForm.topCoeff (boundaryChartPullback M i x h (ω j))) S volume) :
+    boundaryChartIntegralWithSign σ M i x h (∑ j ∈ s, ω j) S =
+      ∑ j ∈ s, boundaryChartIntegralWithSign σ M i x h (ω j) S := by
+  rw [boundaryChartIntegralWithSign, boundaryChartPullback_finset_sum,
+    DiffForm.integral_finset_sum s (fun j => boundaryChartPullback M i x h (ω j)) S hω,
+    Finset.mul_sum]
+  rfl
 
 end SmoothDomain
 

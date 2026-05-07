@@ -20,6 +20,9 @@ compatibility, a global finite cover, or a Stokes theorem.
 
 noncomputable section
 
+open MeasureTheory
+open scoped BigOperators
+
 namespace SmoothDomain
 namespace BoundaryChartPatch
 
@@ -38,6 +41,18 @@ theorem localBoundaryIntegral_smul (P : BoundaryChartPatch M x) (c : ℝ)
       c * P.localBoundaryIntegral ω S hS := by
   simpa [localBoundaryIntegral] using
     boundaryChartIntegralWithSign_smul P.sign M P.i x P.h c ω S
+
+/-- Patch-local boundary integration commutes with finite sums, assuming each local boundary
+pullback top coefficient is integrable on the coordinate set. -/
+theorem localBoundaryIntegral_finset_sum {ι : Type*} (P : BoundaryChartPatch M x)
+    (s : Finset ι) (ω : ι → DiffForm (n + 1) n)
+    (S : Set (ℝSpace n)) (hS : S ⊆ P.localCoordDomain)
+    (hω : ∀ j ∈ s,
+      IntegrableOn (DiffForm.topCoeff (boundaryChartPullback M P.i x P.h (ω j))) S volume) :
+    P.localBoundaryIntegral (∑ j ∈ s, ω j) S hS =
+      ∑ j ∈ s, P.localBoundaryIntegral (ω j) S hS := by
+  simpa [localBoundaryIntegral] using
+    boundaryChartIntegralWithSign_finset_sum P.sign M P.i x P.h s ω S hω
 
 /-- Patch-local boundary integration is the negative of the patch ambient-orientation sign times
 the plain integral through the boundary chart. -/
