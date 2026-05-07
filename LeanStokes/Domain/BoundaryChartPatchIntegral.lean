@@ -39,6 +39,16 @@ theorem localBoundaryIntegral_smul (P : BoundaryChartPatch M x) (c : ℝ)
   simpa [localBoundaryIntegral] using
     boundaryChartIntegralWithSign_smul P.sign M P.i x P.h c ω S
 
+/-- Patch-local boundary integration is the negative of the patch ambient-orientation sign times
+the plain integral through the boundary chart. -/
+theorem localBoundaryIntegral_eq_neg_domainSign_integral_boundaryChartPullback
+    (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
+    (S : Set (ℝSpace n)) (hS : S ⊆ P.localCoordDomain) :
+    P.localBoundaryIntegral ω S hS =
+      -P.sign.domainSign * DiffForm.integral (boundaryChartPullback M P.i x P.h ω) S := by
+  rw [localBoundaryIntegral, boundaryChartIntegralWithSign,
+    JacobianSign.boundarySign_eq_neg_domainSign]
+
 /-- Positive ambient Jacobian branch: the patch-local boundary sign is `-1`. -/
 theorem localBoundaryIntegral_eq_neg_integral_of_sign_pos (P : BoundaryChartPatch M x)
     (hpos : P.sign = JacobianSign.pos) (ω : DiffForm (n + 1) n)
