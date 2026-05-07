@@ -83,6 +83,10 @@ theorem halfSpaceOutwardFirstBasis_orientation [NeZero d] :
 def halfSpaceBoundaryParam (n : ℕ) : ℝSpace n →L[ℝ] ℝSpace (n + 1) :=
   ContinuousLinearMap.pi fun j => Fin.cases 0 (fun i : Fin n => ContinuousLinearMap.proj i) j
 
+/-- Coordinate projection from the model boundary face to its tangent coordinates. -/
+def halfSpaceBoundaryCoord (n : ℕ) : ℝSpace (n + 1) →L[ℝ] ℝSpace n :=
+  ContinuousLinearMap.pi fun i : Fin n => ContinuousLinearMap.proj i.succ
+
 @[simp] theorem halfSpaceBoundaryParam_apply_zero (n : ℕ) (y : ℝSpace n) :
     halfSpaceBoundaryParam n y (0 : Fin (n + 1)) = 0 := by
   simp [halfSpaceBoundaryParam]
@@ -90,6 +94,29 @@ def halfSpaceBoundaryParam (n : ℕ) : ℝSpace n →L[ℝ] ℝSpace (n + 1) :=
 @[simp] theorem halfSpaceBoundaryParam_apply_succ (n : ℕ) (y : ℝSpace n) (i : Fin n) :
     halfSpaceBoundaryParam n y i.succ = y i := by
   simp [halfSpaceBoundaryParam]
+
+@[simp] theorem halfSpaceBoundaryCoord_apply (n : ℕ) (z : ℝSpace (n + 1)) (i : Fin n) :
+    halfSpaceBoundaryCoord n z i = z i.succ := by
+  simp [halfSpaceBoundaryCoord]
+
+@[simp] theorem halfSpaceBoundaryCoord_halfSpaceBoundaryParam (n : ℕ) (y : ℝSpace n) :
+    halfSpaceBoundaryCoord n (halfSpaceBoundaryParam n y) = y := by
+  ext i
+  simp
+
+/-- On the model boundary face, boundary parametrization and coordinate projection are inverse. -/
+theorem halfSpaceBoundaryParam_halfSpaceBoundaryCoord_of_mem_boundary (n : ℕ)
+    {z : ℝSpace (n + 1)} (hz : z ∈ HalfSpaceBdry (n + 1)) :
+    halfSpaceBoundaryParam n (halfSpaceBoundaryCoord n z) = z := by
+  ext j
+  cases j using Fin.cases with
+  | zero =>
+      have hz0 : z (0 : Fin (n + 1)) = 0 := by
+        simpa [HalfSpaceBdry] using hz
+      change (0 : ℝ) = z (0 : Fin (n + 1))
+      exact hz0.symm
+  | succ i =>
+      simp
 
 /-- The boundary parametrization lands in the boundary face. -/
 theorem halfSpaceBoundaryParam_mem_boundary (n : ℕ) (y : ℝSpace n) :

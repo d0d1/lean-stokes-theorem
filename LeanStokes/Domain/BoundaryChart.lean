@@ -34,6 +34,22 @@ def boundaryChartCoordDomain (M : SmoothDomain (n + 1)) (i : Fin (n + 1))
     (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) : Set (ℝSpace n) :=
   { y | halfSpaceBoundaryParam n y ∈ (M.halfSpaceFlatteningChart i x h).target }
 
+/-- The coordinate domain of a local boundary chart is open. -/
+theorem isOpen_boundaryChartCoordDomain (M : SmoothDomain (n + 1)) (i : Fin (n + 1))
+    (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    IsOpen (boundaryChartCoordDomain M i x h) := by
+  simpa [boundaryChartCoordDomain] using
+    (M.halfSpaceFlatteningChart i x h).open_target.preimage
+      (halfSpaceBoundaryParam n).continuous
+
+/-- The coordinate domain of a local boundary chart is measurable. -/
+theorem measurableSet_boundaryChartCoordDomain (M : SmoothDomain (n + 1)) (i : Fin (n + 1))
+    (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    MeasurableSet (boundaryChartCoordDomain M i x h) :=
+  (isOpen_boundaryChartCoordDomain M i x h).measurableSet
+
 /-- Local parametrization of the domain boundary through a half-space-flattening chart.
 
 This is a total function because `OpenPartialHomeomorph.symm` is total, but its
@@ -73,6 +89,30 @@ theorem boundaryChartParam_mem_boundary (M : SmoothDomain (n + 1)) (i : Fin (n +
   rw [M.mem_boundary_iff_halfSpaceFlatteningChart_mem i x h]
   rw [halfSpaceFlatteningChart_boundaryChartParam M i x h hy]
   exact halfSpaceBoundaryParam_mem_boundary n y
+
+/-- The center boundary point has a valid coordinate in its local boundary chart. -/
+theorem halfSpaceBoundaryCoord_mem_boundaryChartCoordDomain_at_center
+    (M : SmoothDomain (n + 1)) (i : Fin (n + 1)) (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (hx : x ∈ M.boundary) :
+    halfSpaceBoundaryCoord n (M.halfSpaceFlatteningMap i x) ∈
+      boundaryChartCoordDomain M i x h := by
+  have hbdry : M.halfSpaceFlatteningMap i x ∈ HalfSpaceBdry (n + 1) := by
+    exact (M.mem_boundary_iff_halfSpaceFlatteningMap_mem i x).mp hx
+  dsimp [boundaryChartCoordDomain]
+  rw [halfSpaceBoundaryParam_halfSpaceBoundaryCoord_of_mem_boundary n hbdry]
+  exact M.image_mem_halfSpaceFlatteningChart_target i x h
+
+/-- The local boundary chart sends the center boundary coordinate back to the center point. -/
+theorem boundaryChartParam_halfSpaceBoundaryCoord_at_center
+    (M : SmoothDomain (n + 1)) (i : Fin (n + 1)) (x : ℝSpace (n + 1))
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (hx : x ∈ M.boundary) :
+    boundaryChartParam M i x h (halfSpaceBoundaryCoord n (M.halfSpaceFlatteningMap i x)) = x := by
+  have hbdry : M.halfSpaceFlatteningMap i x ∈ HalfSpaceBdry (n + 1) := by
+    exact (M.mem_boundary_iff_halfSpaceFlatteningMap_mem i x).mp hx
+  unfold boundaryChartParam
+  rw [halfSpaceBoundaryParam_halfSpaceBoundaryCoord_of_mem_boundary n hbdry]
+  simpa using
+    (M.halfSpaceFlatteningChart i x h).left_inv (M.mem_halfSpaceFlatteningChart_source i x h)
 
 /-- Raw pullback of a boundary form through a local boundary chart.
 
