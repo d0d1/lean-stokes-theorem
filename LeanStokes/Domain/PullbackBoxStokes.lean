@@ -5,6 +5,7 @@ Authors: LeanStokes Contributors
 -/
 import LeanStokes.CubeStokes.PullbackSmooth
 import LeanStokes.Domain.BoxStokes
+import LeanStokes.DiffForm.Localization
 
 /-!
 # Pullback Form Half-Space Box Stokes
@@ -72,6 +73,28 @@ theorem halfSpaceBoxStokes_pullback_of_disjoint_support_boxArtificialFaces
   halfSpaceBoxStokes_pullback_of_vanishesOnArtificialFaces f ω a b hle ha0 hf hω
     (vanishesOnBoxArtificialFaces_of_disjoint_support_boxArtificialFaces
       (DiffForm.pullback f ω) a b hdisj)
+
+/-- Local half-space box Stokes for a localized pullback form when the pulled-back scalar support is
+disjoint from the artificial box faces. -/
+theorem halfSpaceBoxStokes_pullback_fsmul_of_disjoint_support_scalar_boxArtificialFaces
+    (f : ℝSpace (n + 1) → ℝSpace m) (χ : ℝSpace m → ℝ) (ω : DiffForm m n)
+    (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hf : ContDiff ℝ ⊤ f) (hχ : ContDiff ℝ ⊤ χ) (hω : ContDiff ℝ ⊤ ω)
+    (hdisj : Disjoint (Function.support (χ ∘ f)) (boxArtificialFaces a b)) :
+    DiffForm.integral (DiffForm.pullback f (DiffForm.extd (DiffForm.fsmul χ ω))) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f (DiffForm.fsmul χ ω))
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) := by
+  have hχω : ContDiff ℝ ⊤ (DiffForm.fsmul χ ω) :=
+    DiffForm.isSmooth_fsmul hχ hω
+  have hdisj_form :
+      Disjoint (Function.support (DiffForm.pullback f (DiffForm.fsmul χ ω)))
+        (boxArtificialFaces a b) := by
+    rw [DiffForm.pullback_fsmul]
+    exact DiffForm.disjoint_support_fsmul_of_disjoint_support_left hdisj
+  exact halfSpaceBoxStokes_pullback_of_disjoint_support_boxArtificialFaces
+    f (DiffForm.fsmul χ ω) a b hle ha0 hf hχω hdisj_form
 
 end CubeStokes
 
