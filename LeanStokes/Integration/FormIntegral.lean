@@ -70,6 +70,23 @@ Defined as ∫ x in S, ω(x)(e₁,...,eₙ) dλ where λ is Lebesgue measure. -/
 def integral (ω : DiffForm d d) (S : Set (ℝSpace d)) : ℝ :=
   ∫ x in S, topCoeff ω x ∂volume
 
+/-- Top-form integrals agree when their scalar top coefficients agree on the measurable
+integration set. -/
+theorem integral_congr_topCoeff (ω₁ ω₂ : DiffForm d d) {S : Set (ℝSpace d)}
+    (hS : MeasurableSet S)
+    (h : ∀ x ∈ S, topCoeff ω₁ x = topCoeff ω₂ x) :
+    integral ω₁ S = integral ω₂ S := by
+  unfold integral
+  exact MeasureTheory.setIntegral_congr_fun hS h
+
+/-- Top-form integrals agree when the forms agree pointwise on the measurable integration set. -/
+theorem integral_congr (ω₁ ω₂ : DiffForm d d) {S : Set (ℝSpace d)}
+    (hS : MeasurableSet S) (h : ∀ x ∈ S, ω₁ x = ω₂ x) :
+    integral ω₁ S = integral ω₂ S := by
+  apply integral_congr_topCoeff ω₁ ω₂ hS
+  intro x hx
+  simp [topCoeff, h x hx]
+
 /-- Integration is linear: ∫(ω₁ + ω₂) = ∫ω₁ + ∫ω₂. -/
 theorem integral_add (ω₁ ω₂ : DiffForm d d) (S : Set (ℝSpace d))
     (h₁ : IntegrableOn (topCoeff ω₁) S volume)
