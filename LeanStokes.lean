@@ -36,6 +36,7 @@ import LeanStokes.CubeStokes.Naturality
 import LeanStokes.DiffForm.Basic
 import LeanStokes.DiffForm.ExteriorDeriv
 import LeanStokes.DiffForm.Pullback
+import LeanStokes.DiffForm.Localization
 
 -- Smooth singular cubical Stokes (extension layer)
 import LeanStokes.SingularCubeStokes.Defs
