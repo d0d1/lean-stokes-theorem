@@ -86,6 +86,90 @@ theorem neg_lowFaceIntegral_zero_eq_halfSpaceBoundaryIntegral
         simp [SmoothDomain.halfSpaceBoundaryFrame]
   simp [CubeStokes.signedCoeff, CubeStokes.toCoordNForm, ha0, hpoint, hframe]
 
+/-- Pointwise vanishing of all box faces except the true lower `x₀ = 0` half-space boundary face.
+
+This is an algebraic face-integrand hypothesis.  Later support-control lemmas can provide it from
+compact-support assumptions away from the artificial faces. -/
+def VanishesOnBoxArtificialFaces (ω : DiffForm (n + 1) n)
+    (a b : ℝSpace (n + 1)) : Prop :=
+  (∀ y ∈ Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+              (b ∘ Fin.succAbove (0 : Fin (n + 1))),
+      CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) (0 : Fin (n + 1))
+        (Fin.insertNth (0 : Fin (n + 1)) (b (0 : Fin (n + 1))) y) = 0) ∧
+  ∀ i : Fin n,
+    (∀ y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+      CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+        (Fin.insertNth i.succ (b i.succ) y) = 0) ∧
+    (∀ y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+      CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+        (Fin.insertNth i.succ (a i.succ) y) = 0)
+
+/-- If every artificial box face vanishes pointwise, the cubical boundary integral is exactly the
+standard half-space boundary integral on the true lower `x₀ = 0` face. -/
+theorem bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hvanish : VanishesOnBoxArtificialFaces ω a b) :
+    CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b =
+      SmoothDomain.halfSpaceBoundaryIntegral n ω
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) := by
+  unfold CubeStokes.bdryIntegral
+  rw [Fin.sum_univ_succ]
+  have hhigh0 :
+      (∫ y in Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+                    (b ∘ Fin.succAbove (0 : Fin (n + 1))),
+        CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) (0 : Fin (n + 1))
+          (Fin.insertNth (0 : Fin (n + 1)) (b (0 : Fin (n + 1))) y)) = 0 := by
+    rw [show
+        (∫ y in Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+                      (b ∘ Fin.succAbove (0 : Fin (n + 1))),
+          CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) (0 : Fin (n + 1))
+            (Fin.insertNth (0 : Fin (n + 1)) (b (0 : Fin (n + 1))) y)) =
+          ∫ y in Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+                      (b ∘ Fin.succAbove (0 : Fin (n + 1))), (0 : ℝ) from
+        MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+          (fun y hy => hvanish.1 y hy)]
+    simp
+  have hsucc :
+      (∑ i : Fin n,
+        ((∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+            CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+              (Fin.insertNth i.succ (b i.succ) x)) -
+          (∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+            CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+              (Fin.insertNth i.succ (a i.succ) x)))) = 0 := by
+    apply Finset.sum_eq_zero
+    intro i _
+    rcases hvanish.2 i with ⟨hhi, hlo⟩
+    have hhigh :
+        (∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+          CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+            (Fin.insertNth i.succ (b i.succ) x)) = 0 := by
+      rw [show
+          (∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+            CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+              (Fin.insertNth i.succ (b i.succ) x)) =
+            ∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ), (0 : ℝ) from
+          MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+            (fun x hx => hhi x hx)]
+      simp
+    have hlow :
+        (∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+          CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+            (Fin.insertNth i.succ (a i.succ) x)) = 0 := by
+      rw [show
+          (∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+            CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
+              (Fin.insertNth i.succ (a i.succ) x)) =
+            ∫ x in Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ), (0 : ℝ) from
+          MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+            (fun x hx => hlo x hx)]
+      simp
+    rw [hhigh, hlow, sub_self]
+  rw [hhigh0, hsucc, zero_sub, add_zero]
+  exact CubeStokes.neg_lowFaceIntegral_zero_eq_halfSpaceBoundaryIntegral ω a b ha0
+
 end CubeStokes
 
 end
