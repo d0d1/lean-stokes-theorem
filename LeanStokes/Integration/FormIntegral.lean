@@ -28,13 +28,37 @@ namespace DiffForm
 variable {d : ℕ}
 
 /-- The standard basis of ℝᵈ as `Fin d → (Fin d → ℝ)`. -/
-private def stdBasis : Fin d → ℝSpace d :=
-  fun i j => if i = j then 1 else 0
+def stdBasis : Fin d → ℝSpace d :=
+  fun i => Pi.single i 1
 
 /-- Evaluate a top-degree form on the standard basis to get a scalar function.
 This extracts the unique coefficient f such that ω = f · dx₁ ∧ ... ∧ dxₙ. -/
 def topCoeff (ω : DiffForm d d) : ℝSpace d → ℝ :=
   fun x => ω x stdBasis
+
+@[simp] theorem topCoeff_apply (ω : DiffForm d d) (x : ℝSpace d) :
+    topCoeff ω x = ω x stdBasis :=
+  rfl
+
+@[simp] theorem topCoeff_add_apply (ω₁ ω₂ : DiffForm d d) (x : ℝSpace d) :
+    topCoeff (ω₁ + ω₂) x = topCoeff ω₁ x + topCoeff ω₂ x := by
+  simp [topCoeff]
+
+@[simp] theorem topCoeff_smul_apply (c : ℝ) (ω : DiffForm d d) (x : ℝSpace d) :
+    topCoeff (c • ω) x = c * topCoeff ω x := by
+  simp [topCoeff, smul_eq_mul]
+
+/-- Evaluating a continuous top-degree form on the standard basis gives a continuous coefficient. -/
+theorem continuous_topCoeff {ω : DiffForm d d} (hω : Continuous ω) :
+    Continuous (topCoeff ω) := by
+  simpa [topCoeff] using
+    (ContinuousAlternatingMap.apply ℝ (ℝSpace d) ℝ (stdBasis (d := d))).continuous.comp hω
+
+/-- A continuous top coefficient is integrable on a compact set. -/
+theorem integrableOn_topCoeff_of_isCompact {ω : DiffForm d d} {S : Set (ℝSpace d)}
+    (hω : ContinuousOn (topCoeff ω) S) (hS : IsCompact S) :
+    IntegrableOn (topCoeff ω) S volume :=
+  hω.integrableOn_compact hS
 
 /-- Integration of a top-degree form over a measurable set S ⊆ ℝᵈ.
 Defined as ∫ x in S, ω(x)(e₁,...,eₙ) dλ where λ is Lebesgue measure. -/
