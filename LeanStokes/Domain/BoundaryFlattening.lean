@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.SmoothDomain
+import Mathlib.Analysis.Calculus.InverseFunctionTheorem.ContDiff
 import Mathlib.LinearAlgebra.Determinant
 import Mathlib.LinearAlgebra.StdBasis
 import Mathlib.Topology.Algebra.Module.FiniteDimension
@@ -154,6 +155,67 @@ def flatteningFDerivEquiv (i : Fin d) (x : ℝSpace d)
       fderiv ℝ (M.flatteningMap i) x := by
   simp [flatteningFDerivEquiv]
 
+/-- The flattening map has derivative equal to its `fderiv`. -/
+theorem hasFDerivAt_flatteningMap (i : Fin d) (x : ℝSpace d) :
+    HasFDerivAt (M.flatteningMap i) (fderiv ℝ (M.flatteningMap i) x) x :=
+  ((M.contDiff_flatteningMap i).differentiable (by simp)).differentiableAt.hasFDerivAt
+
+/-- Derivative witness for the flattening map using the generated continuous linear equivalence. -/
+theorem hasFDerivAt_flatteningMap_equiv (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    HasFDerivAt (M.flatteningMap i)
+      (M.flatteningFDerivEquiv i x h : ℝSpace d →L[ℝ] ℝSpace d) x := by
+  simpa using M.hasFDerivAt_flatteningMap i x
+
+/-- Local boundary-flattening chart at a point where the selected partial derivative is nonzero.
+
+This chart still flattens to the selected coordinate `i`; a later coordinate permutation moves that
+coordinate to the first-coordinate half-space model. -/
+def flatteningChart (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    OpenPartialHomeomorph (ℝSpace d) (ℝSpace d) :=
+  ((M.contDiff_flatteningMap i).contDiffAt).toOpenPartialHomeomorph
+    (M.flatteningMap i) (M.hasFDerivAt_flatteningMap_equiv i x h) (by simp)
+
+@[simp] theorem flatteningChart_coe (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    (M.flatteningChart i x h : ℝSpace d → ℝSpace d) = M.flatteningMap i :=
+  rfl
+
+/-- The center point belongs to the source of its flattening chart. -/
+theorem mem_flatteningChart_source (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    x ∈ (M.flatteningChart i x h).source :=
+  ContDiffAt.mem_toOpenPartialHomeomorph_source
+    ((M.contDiff_flatteningMap i).contDiffAt)
+    (M.hasFDerivAt_flatteningMap_equiv i x h) (by simp)
+
+/-- The image of the center point belongs to the target of its flattening chart. -/
+theorem image_mem_flatteningChart_target (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    M.flatteningMap i x ∈ (M.flatteningChart i x h).target :=
+  ContDiffAt.image_mem_toOpenPartialHomeomorph_target
+    ((M.contDiff_flatteningMap i).contDiffAt)
+    (M.hasFDerivAt_flatteningMap_equiv i x h) (by simp)
+
+/-- Carrier membership expressed using the total function underlying a flattening chart. -/
+theorem mem_carrier_iff_flatteningChart_coord_nonneg (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
+    y ∈ M.carrier ↔ 0 ≤ (M.flatteningChart i x h y) i := by
+  simpa [flatteningChart] using M.mem_carrier_iff_flatteningMap_coord_nonneg i y
+
+/-- Boundary membership expressed using the total function underlying a flattening chart. -/
+theorem mem_boundary_iff_flatteningChart_coord_eq_zero (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
+    y ∈ M.boundary ↔ (M.flatteningChart i x h y) i = 0 := by
+  simpa [flatteningChart] using M.mem_boundary_iff_flatteningMap_coord_eq_zero i y
+
+/-- Strict interior membership expressed using the total function underlying a flattening chart. -/
+theorem mem_int_iff_flatteningChart_coord_pos (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
+    y ∈ M.int ↔ 0 < (M.flatteningChart i x h y) i := by
+  simpa [flatteningChart] using M.mem_int_iff_flatteningMap_coord_pos i y
+
 /-- At every boundary point, some standard coordinate has nonzero derivative. -/
 theorem exists_nonzero_fderiv_stdBasis {x : ℝSpace d} (hx : x ∈ M.boundary) :
     ∃ i : Fin d, fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0 := by
@@ -172,6 +234,13 @@ theorem exists_nonzero_fderiv_stdBasis {x : ℝSpace d} (hx : x ∈ M.boundary) 
       simp [map_sum]
     _ = 0 := by
       simp [h]
+
+/-- Every boundary point admits a flattening chart for a suitable coordinate. -/
+theorem exists_flatteningChart_at_boundary {x : ℝSpace d} (hx : x ∈ M.boundary) :
+    ∃ i, ∃ h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0,
+      x ∈ (M.flatteningChart i x h).source := by
+  rcases M.exists_nonzero_fderiv_stdBasis hx with ⟨i, hi⟩
+  exact ⟨i, hi, M.mem_flatteningChart_source i x hi⟩
 
 end SmoothDomain
 
