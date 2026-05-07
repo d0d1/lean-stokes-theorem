@@ -6,6 +6,7 @@ Authors: LeanStokes Contributors
 import LeanStokes.DiffForm.Pullback
 import LeanStokes.Integration.FormIntegral
 import Mathlib.LinearAlgebra.Determinant
+import Mathlib.MeasureTheory.Function.Jacobian
 
 /-!
 # Pullback and Top Coefficients
@@ -72,6 +73,38 @@ theorem topCoeff_pullback (f : ℝSpace d → ℝSpace d) (η : DiffForm d d)
       LinearMap.det (fderiv ℝ f x : ℝSpace d →ₗ[ℝ] ℝSpace d) * topCoeff η (f x) := by
   simpa [topCoeff, pullback] using
     topCoeff_compContinuousLinearMap (η (f x)) (fderiv ℝ f x)
+
+/-- Change of variables for top-form integrals under a map whose global derivative agrees with
+the within derivative on the source and has nonnegative determinant there. -/
+theorem integral_image_eq_integral_pullback_of_det_nonneg
+    {f : ℝSpace d → ℝSpace d} {s : Set (ℝSpace d)} (η : DiffForm d d)
+    (hs : MeasurableSet s)
+    (hfderiv : ∀ x ∈ s, HasFDerivWithinAt f (fderiv ℝ f x) s x)
+    (hf : Set.InjOn f s)
+    (hdet : ∀ x ∈ s, 0 ≤ LinearMap.det (fderiv ℝ f x : ℝSpace d →ₗ[ℝ] ℝSpace d)) :
+    integral η (f '' s) = integral (pullback f η) s := by
+  unfold integral
+  rw [MeasureTheory.integral_image_eq_integral_abs_det_fderiv_smul (μ := volume) hs hfderiv hf]
+  apply MeasureTheory.setIntegral_congr_fun hs
+  intro x hx
+  dsimp
+  have hdet' : 0 ≤ (fderiv ℝ f x).det := by
+    simpa using hdet x hx
+  rw [abs_of_nonneg hdet']
+  change (fderiv ℝ f x).det * topCoeff η (f x) = topCoeff (pullback f η) x
+  rw [topCoeff_pullback]
+
+/-- A differentiability-at version of
+`integral_image_eq_integral_pullback_of_det_nonneg`. -/
+theorem integral_image_eq_integral_pullback_of_det_nonneg_of_differentiableAt
+    {f : ℝSpace d → ℝSpace d} {s : Set (ℝSpace d)} (η : DiffForm d d)
+    (hs : MeasurableSet s)
+    (hf' : ∀ x ∈ s, DifferentiableAt ℝ f x)
+    (hf : Set.InjOn f s)
+    (hdet : ∀ x ∈ s, 0 ≤ LinearMap.det (fderiv ℝ f x : ℝSpace d →ₗ[ℝ] ℝSpace d)) :
+    integral η (f '' s) = integral (pullback f η) s :=
+  integral_image_eq_integral_pullback_of_det_nonneg η hs
+    (fun x hx => (hf' x hx).hasFDerivAt.hasFDerivWithinAt) hf hdet
 
 end DiffForm
 
