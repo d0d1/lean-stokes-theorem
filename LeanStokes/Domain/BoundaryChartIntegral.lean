@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.BoundaryChart
+import LeanStokes.Domain.JacobianSign
 import LeanStokes.Integration.FormIntegral
 
 /-!
@@ -24,51 +25,6 @@ noncomputable section
 namespace SmoothDomain
 
 variable {n : ℕ}
-
-/-- The two possible nonzero signs of a local flattening-chart Jacobian determinant. -/
-inductive JacobianSign where
-  /-- Positive ambient Jacobian determinant for the first-coordinate-facing flattening map. -/
-  | pos
-  /-- Negative ambient Jacobian determinant for the first-coordinate-facing flattening map. -/
-  | neg
-  deriving DecidableEq
-
-namespace JacobianSign
-
-/-- Sign with which a chart branch changes oriented top-dimensional domain integrals. -/
-def domainSign : JacobianSign → ℝ
-  | pos => 1
-  | neg => -1
-
-/-- Sign with which a chart branch changes induced boundary integrals.
-
-For the upper half-space convention `{x₀ ≥ 0}`, the model boundary sign is `-1`
-because the outward normal is `-e₀`; reversing the ambient chart orientation
-reverses the induced boundary orientation. -/
-def boundarySign : JacobianSign → ℝ
-  | pos => -1
-  | neg => 1
-
-@[simp] theorem domainSign_pos : domainSign pos = 1 := rfl
-
-@[simp] theorem domainSign_neg : domainSign neg = -1 := rfl
-
-@[simp] theorem boundarySign_pos : boundarySign pos = -1 := rfl
-
-@[simp] theorem boundarySign_neg : boundarySign neg = 1 := rfl
-
-/-- Boundary orientation changes by the negative of the ambient domain-orientation sign. -/
-theorem boundarySign_eq_neg_domainSign (σ : JacobianSign) :
-    σ.boundarySign = -σ.domainSign := by
-  cases σ <;> norm_num [boundarySign, domainSign]
-
-@[simp] theorem domainSign_ne_zero (σ : JacobianSign) : σ.domainSign ≠ 0 := by
-  cases σ <;> norm_num
-
-@[simp] theorem boundarySign_ne_zero (σ : JacobianSign) : σ.boundarySign ≠ 0 := by
-  cases σ <;> norm_num
-
-end JacobianSign
 
 /-- Pullback through a local boundary chart commutes with scalar multiplication. -/
 theorem boundaryChartPullback_smul (M : SmoothDomain (n + 1)) (i : Fin (n + 1))
