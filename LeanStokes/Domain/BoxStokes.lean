@@ -263,6 +263,34 @@ theorem halfSpaceBoxStokes_of_vanishesOnArtificialFaces
     CubeStokes.bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
       ω a b ha0 hvanish]
 
+/-- Local half-space box Stokes when the form is pointwise zero on every artificial face
+point-set. -/
+theorem halfSpaceBoxStokes_of_eq_zero_on_boxArtificialFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hzero : ∀ x ∈ boxArtificialFaces a b, ω x = 0) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n ω
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) :=
+  halfSpaceBoxStokes_of_vanishesOnArtificialFaces ω a b hle ha0 hω
+    (vanishesOnBoxArtificialFaces_of_eq_zero_on_boxArtificialFaces ω a b hzero)
+
+/-- Local half-space box Stokes when the form's pointwise support is disjoint from every
+artificial face point-set. -/
+theorem halfSpaceBoxStokes_of_disjoint_support_boxArtificialFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hdisj : Disjoint (Function.support ω) (boxArtificialFaces a b)) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+      SmoothDomain.halfSpaceBoundaryIntegral n ω
+        (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+             (b ∘ Fin.succAbove (0 : Fin (n + 1)))) :=
+  halfSpaceBoxStokes_of_vanishesOnArtificialFaces ω a b hle ha0 hω
+    (vanishesOnBoxArtificialFaces_of_disjoint_support_boxArtificialFaces ω a b hdisj)
+
 end CubeStokes
 
 end
