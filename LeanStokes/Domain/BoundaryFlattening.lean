@@ -3,6 +3,7 @@ Copyright (c) 2026 LeanStokes Contributors. All rights reserved.
 Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
+import LeanStokes.Domain.Coordinate
 import LeanStokes.Domain.SmoothDomain
 import Mathlib.Analysis.Calculus.InverseFunctionTheorem.ContDiff
 import Mathlib.LinearAlgebra.Determinant
@@ -33,6 +34,14 @@ The chosen coordinate is `-φ`, so `φ ≤ 0` becomes the upper-half-space condi
 def flatteningMap (i : Fin d) : ℝSpace d → ℝSpace d :=
   fun x j => if j = i then -M.φ x else x j
 
+/-- First-coordinate-facing version of `flatteningMap`.
+
+It sends the selected flattening coordinate to coordinate `0`, so membership in the domain becomes
+membership in the standard first-coordinate half-space.  The coordinate swap has determinant `1`
+when `i = 0` and `-1` otherwise, so orientation-sensitive statements must record its sign. -/
+def halfSpaceFlatteningMap [NeZero d] (i : Fin d) : ℝSpace d → ℝSpace d :=
+  fun x => Coordinate.moveToZero i (M.flatteningMap i x)
+
 @[simp] theorem flatteningMap_apply_self (i : Fin d) (x : ℝSpace d) :
     M.flatteningMap i x i = -M.φ x := by
   simp [flatteningMap]
@@ -40,6 +49,10 @@ def flatteningMap (i : Fin d) : ℝSpace d → ℝSpace d :=
 @[simp] theorem flatteningMap_apply_ne {i j : Fin d} (hji : j ≠ i) (x : ℝSpace d) :
     M.flatteningMap i x j = x j := by
   simp [flatteningMap, hji]
+
+@[simp] theorem halfSpaceFlatteningMap_apply_zero [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    M.halfSpaceFlatteningMap i x (0 : Fin d) = -M.φ x := by
+  simp [halfSpaceFlatteningMap]
 
 /-- The carrier condition is the nonnegative condition on the replaced coordinate. -/
 theorem mem_carrier_iff_flatteningMap_coord_nonneg (i : Fin d) (x : ℝSpace d) :
@@ -55,6 +68,24 @@ theorem mem_boundary_iff_flatteningMap_coord_eq_zero (i : Fin d) (x : ℝSpace d
 theorem mem_int_iff_flatteningMap_coord_pos (i : Fin d) (x : ℝSpace d) :
     x ∈ M.int ↔ 0 < M.flatteningMap i x i := by
   simp [int]
+
+/-- The carrier condition becomes membership in the standard first-coordinate half-space. -/
+theorem mem_carrier_iff_halfSpaceFlatteningMap_mem [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    x ∈ M.carrier ↔ M.halfSpaceFlatteningMap i x ∈ HalfSpace d := by
+  rw [M.mem_carrier_iff_flatteningMap_coord_nonneg i x]
+  simp [halfSpaceFlatteningMap, HalfSpace]
+
+/-- The boundary condition becomes membership in the standard first-coordinate boundary face. -/
+theorem mem_boundary_iff_halfSpaceFlatteningMap_mem [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    x ∈ M.boundary ↔ M.halfSpaceFlatteningMap i x ∈ HalfSpaceBdry d := by
+  rw [M.mem_boundary_iff_flatteningMap_coord_eq_zero i x]
+  simp [halfSpaceFlatteningMap, HalfSpaceBdry]
+
+/-- The strict interior condition becomes membership in the standard open half-space. -/
+theorem mem_int_iff_halfSpaceFlatteningMap_mem [NeZero d] (i : Fin d) (x : ℝSpace d) :
+    x ∈ M.int ↔ M.halfSpaceFlatteningMap i x ∈ HalfSpaceOpen d := by
+  rw [M.mem_int_iff_flatteningMap_coord_pos i x]
+  simp [halfSpaceFlatteningMap, HalfSpaceOpen]
 
 /-- The coordinate replacement map is smooth. -/
 theorem contDiff_flatteningMap (i : Fin d) :
