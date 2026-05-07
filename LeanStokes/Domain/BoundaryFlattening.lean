@@ -9,6 +9,7 @@ import Mathlib.Analysis.Calculus.InverseFunctionTheorem.ContDiff
 import Mathlib.LinearAlgebra.Determinant
 import Mathlib.LinearAlgebra.StdBasis
 import Mathlib.Topology.Algebra.Module.FiniteDimension
+import Mathlib.Topology.OpenPartialHomeomorph.Constructions
 
 /-!
 # Boundary Flattening Coordinates
@@ -208,9 +209,22 @@ def flatteningChart (i : Fin d) (x : ℝSpace d)
   ((M.contDiff_flatteningMap i).contDiffAt).toOpenPartialHomeomorph
     (M.flatteningMap i) (M.hasFDerivAt_flatteningMap_equiv i x h) (by simp)
 
+/-- Local boundary-flattening chart whose target coordinates use the standard first-coordinate
+half-space convention. -/
+def halfSpaceFlatteningChart [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    OpenPartialHomeomorph (ℝSpace d) (ℝSpace d) :=
+  (M.flatteningChart i x h).transHomeomorph (Coordinate.moveToZeroHomeomorph i)
+
 @[simp] theorem flatteningChart_coe (i : Fin d) (x : ℝSpace d)
     (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
     (M.flatteningChart i x h : ℝSpace d → ℝSpace d) = M.flatteningMap i :=
+  rfl
+
+@[simp] theorem halfSpaceFlatteningChart_coe [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    (M.halfSpaceFlatteningChart i x h : ℝSpace d → ℝSpace d) =
+      M.halfSpaceFlatteningMap i :=
   rfl
 
 /-- The center point belongs to the source of its flattening chart. -/
@@ -229,23 +243,57 @@ theorem image_mem_flatteningChart_target (i : Fin d) (x : ℝSpace d)
     ((M.contDiff_flatteningMap i).contDiffAt)
     (M.hasFDerivAt_flatteningMap_equiv i x h) (by simp)
 
+/-- The center point belongs to the source of its first-coordinate-facing flattening chart. -/
+theorem mem_halfSpaceFlatteningChart_source [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    x ∈ (M.halfSpaceFlatteningChart i x h).source := by
+  simpa [halfSpaceFlatteningChart] using M.mem_flatteningChart_source i x h
+
+/-- The center image belongs to the target of its first-coordinate-facing flattening chart. -/
+theorem image_mem_halfSpaceFlatteningChart_target [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    M.halfSpaceFlatteningMap i x ∈ (M.halfSpaceFlatteningChart i x h).target := by
+  simpa [halfSpaceFlatteningChart, halfSpaceFlatteningMap, Coordinate.moveToZeroHomeomorph] using
+    M.image_mem_flatteningChart_target i x h
+
 /-- Carrier membership expressed using the total function underlying a flattening chart. -/
 theorem mem_carrier_iff_flatteningChart_coord_nonneg (i : Fin d) (x : ℝSpace d)
     (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
     y ∈ M.carrier ↔ 0 ≤ (M.flatteningChart i x h y) i := by
-  simpa [flatteningChart] using M.mem_carrier_iff_flatteningMap_coord_nonneg i y
+  simp [flatteningChart, M.mem_carrier_iff_flatteningMap_coord_nonneg i y]
 
 /-- Boundary membership expressed using the total function underlying a flattening chart. -/
 theorem mem_boundary_iff_flatteningChart_coord_eq_zero (i : Fin d) (x : ℝSpace d)
     (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
     y ∈ M.boundary ↔ (M.flatteningChart i x h y) i = 0 := by
-  simpa [flatteningChart] using M.mem_boundary_iff_flatteningMap_coord_eq_zero i y
+  simp [flatteningChart, M.mem_boundary_iff_flatteningMap_coord_eq_zero i y]
 
 /-- Strict interior membership expressed using the total function underlying a flattening chart. -/
 theorem mem_int_iff_flatteningChart_coord_pos (i : Fin d) (x : ℝSpace d)
     (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
     y ∈ M.int ↔ 0 < (M.flatteningChart i x h y) i := by
-  simpa [flatteningChart] using M.mem_int_iff_flatteningMap_coord_pos i y
+  simp [flatteningChart, M.mem_int_iff_flatteningMap_coord_pos i y]
+
+/-- Carrier membership expressed using the total function underlying a first-coordinate-facing
+flattening chart. -/
+theorem mem_carrier_iff_halfSpaceFlatteningChart_mem [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
+    y ∈ M.carrier ↔ M.halfSpaceFlatteningChart i x h y ∈ HalfSpace d := by
+  simpa using M.mem_carrier_iff_halfSpaceFlatteningMap_mem i y
+
+/-- Boundary membership expressed using the total function underlying a first-coordinate-facing
+flattening chart. -/
+theorem mem_boundary_iff_halfSpaceFlatteningChart_mem [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
+    y ∈ M.boundary ↔ M.halfSpaceFlatteningChart i x h y ∈ HalfSpaceBdry d := by
+  simpa using M.mem_boundary_iff_halfSpaceFlatteningMap_mem i y
+
+/-- Strict interior membership expressed using the total function underlying a first-coordinate-facing
+flattening chart. -/
+theorem mem_int_iff_halfSpaceFlatteningChart_mem [NeZero d] (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :
+    y ∈ M.int ↔ M.halfSpaceFlatteningChart i x h y ∈ HalfSpaceOpen d := by
+  simpa using M.mem_int_iff_halfSpaceFlatteningMap_mem i y
 
 /-- At every boundary point, some standard coordinate has nonzero derivative. -/
 theorem exists_nonzero_fderiv_stdBasis {x : ℝSpace d} (hx : x ∈ M.boundary) :
@@ -272,6 +320,15 @@ theorem exists_flatteningChart_at_boundary {x : ℝSpace d} (hx : x ∈ M.bounda
       x ∈ (M.flatteningChart i x h).source := by
   rcases M.exists_nonzero_fderiv_stdBasis hx with ⟨i, hi⟩
   exact ⟨i, hi, M.mem_flatteningChart_source i x hi⟩
+
+/-- Every boundary point admits a first-coordinate-facing flattening chart for a suitable
+coordinate. -/
+theorem exists_halfSpaceFlatteningChart_at_boundary [NeZero d] {x : ℝSpace d}
+    (hx : x ∈ M.boundary) :
+    ∃ i, ∃ h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0,
+      x ∈ (M.halfSpaceFlatteningChart i x h).source := by
+  rcases M.exists_nonzero_fderiv_stdBasis hx with ⟨i, hi⟩
+  exact ⟨i, hi, M.mem_halfSpaceFlatteningChart_source i x hi⟩
 
 end SmoothDomain
 

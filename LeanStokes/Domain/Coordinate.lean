@@ -52,6 +52,14 @@ def moveToZero [NeZero d] (i : Fin d) : ℝSpace d ≃L[ℝ] ℝSpace d where
     moveToZero i x (0 : Fin d) = x i := by
   simp [moveToZero]
 
+/-- The coordinate swap as a global homeomorphism. -/
+def moveToZeroHomeomorph [NeZero d] (i : Fin d) : ℝSpace d ≃ₜ ℝSpace d :=
+  (moveToZero i).toHomeomorph
+
+@[simp] theorem moveToZeroHomeomorph_apply [NeZero d] (i j : Fin d) (x : ℝSpace d) :
+    moveToZeroHomeomorph i x j = x ((Equiv.swap (0 : Fin d) i) j) :=
+  rfl
+
 /-- Moving coordinate `i` to coordinate `0` converts `0 ≤ x i` to the standard half-space. -/
 theorem mem_halfSpace_moveToZero_iff_coord_nonneg [NeZero d] (i : Fin d) (x : ℝSpace d) :
     moveToZero i x ∈ HalfSpace d ↔ 0 ≤ x i := by
