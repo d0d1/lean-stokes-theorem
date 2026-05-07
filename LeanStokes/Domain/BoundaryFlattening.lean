@@ -4,7 +4,9 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.SmoothDomain
+import Mathlib.LinearAlgebra.Determinant
 import Mathlib.LinearAlgebra.StdBasis
+import Mathlib.Topology.Algebra.Module.FiniteDimension
 
 /-!
 # Boundary Flattening Coordinates
@@ -87,6 +89,70 @@ theorem fderiv_flatteningMap (i : Fin d) (x : ℝSpace d) :
     · simpa [flatteningMap, hji] using
         ((contDiff_apply ℝ ℝ j).differentiable
           (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
+
+/-- Matrix of the flattening derivative in the standard basis.
+
+It is the identity matrix with the selected row replaced by the row of `-dφ`. -/
+theorem toMatrix_fderiv_flatteningMap (i : Fin d) (x : ℝSpace d) :
+    LinearMap.toMatrix (Pi.basisFun ℝ (Fin d)) (Pi.basisFun ℝ (Fin d))
+      (fderiv ℝ (M.flatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d) =
+    Matrix.updateRow (1 : Matrix (Fin d) (Fin d) ℝ) i
+      (fun k => -fderiv ℝ M.φ x ((Pi.basisFun ℝ (Fin d)) k)) := by
+  ext j k
+  rw [LinearMap.toMatrix_apply]
+  rw [M.fderiv_flatteningMap]
+  by_cases hji : j = i
+  · subst j
+    simp
+  · simp [hji, Matrix.one_apply, Pi.single_apply]
+
+/-- The determinant of the flattening derivative is the negative selected partial derivative. -/
+theorem det_fderiv_flatteningMap (i : Fin d) (x : ℝSpace d) :
+    LinearMap.det (fderiv ℝ (M.flatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d) =
+      -fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) := by
+  let b : Module.Basis (Fin d) ℝ (ℝSpace d) := Pi.basisFun ℝ (Fin d)
+  rw [← LinearMap.det_toMatrix b
+    (fderiv ℝ (M.flatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d)]
+  rw [M.toMatrix_fderiv_flatteningMap]
+  let row : Fin d → ℝ := fun k => -fderiv ℝ M.φ x (b k)
+  have hrow : row = ∑ k, row k • (1 : Matrix (Fin d) (Fin d) ℝ) k := by
+    ext k
+    simp [row, Matrix.one_apply]
+  change (Matrix.updateRow (1 : Matrix (Fin d) (Fin d) ℝ) i row).det =
+    -fderiv ℝ M.φ x (Pi.single i (1 : ℝ))
+  rw [hrow]
+  rw [Matrix.det_updateRow_sum]
+  simp [row, b]
+
+/-- The flattening derivative has nonzero determinant when the selected partial derivative is
+nonzero. -/
+theorem det_fderiv_flatteningMap_ne_zero (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    LinearMap.det (fderiv ℝ (M.flatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d) ≠ 0 := by
+  rw [M.det_fderiv_flatteningMap]
+  exact neg_ne_zero.mpr h
+
+/-- Nonvanishing determinant of the flattening derivative is equivalent to the selected partial
+derivative being nonzero. -/
+theorem det_fderiv_flatteningMap_ne_zero_iff (i : Fin d) (x : ℝSpace d) :
+    LinearMap.det (fderiv ℝ (M.flatteningMap i) x : ℝSpace d →ₗ[ℝ] ℝSpace d) ≠ 0 ↔
+      fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0 := by
+  rw [M.det_fderiv_flatteningMap]
+  exact neg_ne_zero
+
+/-- The continuous linear equivalence supplied by a flattening derivative whose selected partial
+derivative is nonzero. -/
+def flatteningFDerivEquiv (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    ℝSpace d ≃L[ℝ] ℝSpace d :=
+  (fderiv ℝ (M.flatteningMap i) x).toContinuousLinearEquivOfDetNeZero
+    (by simpa using M.det_fderiv_flatteningMap_ne_zero i x h)
+
+@[simp] theorem coe_flatteningFDerivEquiv (i : Fin d) (x : ℝSpace d)
+    (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) :
+    (M.flatteningFDerivEquiv i x h : ℝSpace d →L[ℝ] ℝSpace d) =
+      fderiv ℝ (M.flatteningMap i) x := by
+  simp [flatteningFDerivEquiv]
 
 /-- At every boundary point, some standard coordinate has nonzero derivative. -/
 theorem exists_nonzero_fderiv_stdBasis {x : ℝSpace d} (hx : x ∈ M.boundary) :
