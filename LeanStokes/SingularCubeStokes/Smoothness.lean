@@ -5,7 +5,7 @@ Authors: LeanStokes Contributors
 -/
 import LeanStokes.SingularCubeStokes.Pullback
 import LeanStokes.CubeStokes.Bridge
-import Mathlib.Analysis.Normed.Module.Multilinear.Curry
+import LeanStokes.DiffForm.SmoothEval
 
 /-!
 # Smoothness of Pullback Forms
@@ -22,10 +22,9 @@ has smooth coordinate coefficients and is differentiable.
 
 ## Strategy
 
-The key helper (`contDiff_multilinearMap_apply_of_contDiff`) uses induction on arity:
-- Base (arity 0): evaluation at the unique empty tuple is a CLM → compose with smooth = smooth
-- Step (arity N+1): curry the first argument via `continuousMultilinearCurryLeftEquiv`, use
-  `ContDiff.clm_apply` for the curried step, then apply induction for the remaining arguments.
+The generic smooth multilinear-evaluation helper lives in
+`LeanStokes.DiffForm.SmoothEval`; this file keeps the singular-cube regularity
+specializations.
 -/
 
 noncomputable section
@@ -37,60 +36,19 @@ namespace SingularCubeStokes
 
 variable {d m : ℕ}
 
-section SmoothnessHelper
-
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {E F G : Type*}
   [NormedAddCommGroup E] [NormedSpace 𝕜 E]
   [NormedAddCommGroup F] [NormedSpace 𝕜 F]
   [NormedAddCommGroup G] [NormedSpace 𝕜 G]
 
-/-- **Key smoothness lemma**: If `f` is a C^∞ function valued in continuous multilinear maps
-of arity N, and each `gₖ` is a C^∞ function, then the pointwise evaluation
-`x ↦ (f x)(g₀ x, g₁ x, ..., g_{N-1} x)` is C^∞.
-
-Proof by induction on N using currying. -/
+/-- Compatibility alias for the generic smooth multilinear-evaluation helper. -/
 theorem contDiff_multilinearMap_apply_of_contDiff (N : ℕ)
     (f : E → ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G)
     (g : Fin N → E → F)
     (hf : ContDiff 𝕜 ⊤ f) (hg : ∀ k, ContDiff 𝕜 ⊤ (g k)) :
-    ContDiff 𝕜 ⊤ (fun x => (f x) (fun k => g k x)) := by
-  induction N with
-  | zero =>
-    -- For arity 0, (Fin 0 → F) is subsingleton, so (fun k => g k x) = default
-    have h_eq : (fun x => (f x) (fun k : Fin 0 => g k x)) =
-        (fun x => (f x) (Fin.elim0)) := by
-      ext x; congr 1; exact Subsingleton.elim _ _
-    rw [h_eq]
-    -- (f x) Fin.elim0 is a CLM applied to f x
-    exact (ContinuousMultilinearMap.apply 𝕜 (fun _ : Fin 0 => F) G
-      Fin.elim0).contDiff.comp hf
-  | succ N ih =>
-    -- Rewrite using Fin.cons: (fun k => g k x) = Fin.cons (g 0 x) (fun k => g (succ k) x)
-    have h_eq : (fun x => (f x) (fun k => g k x)) =
-        (fun x => (f x) (Fin.cons (g 0 x) (fun k => g (Fin.succ k) x))) := by
-      ext x; congr 1; exact (Fin.cons_self_tail (fun k => g k x)).symm
-    rw [h_eq]
-    -- Use curryLeft: f(cons v₀ rest) = f.curryLeft(v₀)(rest)
-    have h_curry : (fun x => (f x) (Fin.cons (g 0 x) (fun k => g (Fin.succ k) x))) =
-        (fun x => ((f x).curryLeft (g 0 x)) (fun k => g (Fin.succ k) x)) := by
-      ext x; rw [ContinuousMultilinearMap.curryLeft_apply]
-    rw [h_curry]
-    -- curryLeft is a linear isometric equiv, extract it as CLM
-    set CL := (continuousMultilinearCurryLeftEquiv 𝕜 (fun _ : Fin (N + 1) => F) G
-      ).toContinuousLinearEquiv.toContinuousLinearMap
-    -- CL ∘ f is smooth (CLM composed with smooth f)
-    have hCLf : ContDiff 𝕜 ⊤ (fun x => CL (f x)) := CL.contDiff.comp hf
-    -- h(x) := (f x).curryLeft (g 0 x) = (CL (f x)) (g 0 x) is smooth by clm_apply
-    have h_clm_eq : (fun x => (f x).curryLeft (g 0 x)) = (fun x => (CL (f x)) (g 0 x)) := by
-      rfl
-    have hh : ContDiff 𝕜 ⊤ (fun x => (f x).curryLeft (g 0 x)) := by
-      rw [h_clm_eq]; exact hCLf.clm_apply (hg 0)
-    -- Apply induction hypothesis
-    exact ih (fun x => (f x).curryLeft (g 0 x))
-      (fun k => g (Fin.succ k)) hh (fun k => hg (Fin.succ k))
-
-end SmoothnessHelper
+    ContDiff 𝕜 ⊤ (fun x => (f x) (fun k => g k x)) :=
+  DiffForm.contDiff_multilinearMap_apply_of_contDiff N f g hf hg
 
 /-- The pullback form is differentiable: if ω is differentiable and σ is C^∞,
 then `pullbackForm σ ω` is differentiable as a ContinuousAlternatingMap-valued function. -/

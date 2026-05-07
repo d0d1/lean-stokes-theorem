@@ -10,6 +10,7 @@ import LeanStokes.CubeStokes.BdryEquiv
 import LeanStokes.CubeStokes.Bridge
 import LeanStokes.CubeStokes.FacePullback
 import LeanStokes.CubeStokes.Unified
+import LeanStokes.CubeStokes.PullbackSmooth
 import LeanStokes.CubeStokes.Validation
 import LeanStokes.CubeStokes.Check
 
@@ -36,6 +37,7 @@ import LeanStokes.CubeStokes.Naturality
 import LeanStokes.DiffForm.Basic
 import LeanStokes.DiffForm.ExteriorDeriv
 import LeanStokes.DiffForm.Pullback
+import LeanStokes.DiffForm.SmoothEval
 import LeanStokes.DiffForm.Localization
 
 -- Smooth singular cubical Stokes (extension layer)
