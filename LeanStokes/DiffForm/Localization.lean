@@ -3,6 +3,7 @@ Copyright (c) 2026 LeanStokes Contributors. All rights reserved.
 Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
+import LeanStokes.DiffForm.Pullback
 import LeanStokes.Integration.FormIntegral
 import Mathlib.Topology.Algebra.Support
 
@@ -90,6 +91,38 @@ theorem finset_sum_fsmul_eventuallyEq_on_of_sum_eventuallyEq_one {ι : Type*}
     ∀ x ∈ S, (∑ i ∈ s, fsmul (f i) ω) =ᶠ[𝓝 x] ω := by
   intro x hx
   exact finset_sum_fsmul_eventuallyEq_of_sum_eventuallyEq_one s f ω (h x hx)
+
+/-- Scalar localization is zero at a point where the scalar function is zero. -/
+theorem fsmul_eq_zero_of_left_eq_zero {f : ℝSpace d → ℝ} {ω : DiffForm d n}
+    {x : ℝSpace d} (hf : f x = 0) :
+    fsmul f ω x = 0 := by
+  simp [fsmul, hf]
+
+/-- The support of a scalar-localized form is contained in the support of the scalar factor. -/
+theorem support_fsmul_subset_left (f : ℝSpace d → ℝ) (ω : DiffForm d n) :
+    Function.support (fsmul f ω) ⊆ Function.support f := by
+  intro x hx
+  by_contra hfx
+  have hfzero : f x = 0 := by
+    by_contra hfne
+    exact hfx hfne
+  exact hx (fsmul_eq_zero_of_left_eq_zero (ω := ω) hfzero)
+
+/-- Disjointness of the scalar support from a set implies disjointness of the localized-form
+support from that set. -/
+theorem disjoint_support_fsmul_of_disjoint_support_left
+    {f : ℝSpace d → ℝ} {ω : DiffForm d n} {T : Set (ℝSpace d)}
+    (h : Disjoint (Function.support f) T) :
+    Disjoint (Function.support (fsmul f ω)) T :=
+  h.mono_left (support_fsmul_subset_left f ω)
+
+/-- Pullback commutes with scalar localization, with the scalar pulled back as a function. -/
+theorem pullback_fsmul {m d n : ℕ}
+    (g : ℝSpace d → ℝSpace m) (f : ℝSpace m → ℝ) (ω : DiffForm m n) :
+    pullback g (fsmul f ω) = fsmul (f ∘ g) (pullback g ω) := by
+  funext x
+  ext v
+  simp [pullback, fsmul, Function.comp_def]
 
 @[simp] theorem topCoeff_fsmul (f : ℝSpace d → ℝ) (ω : DiffForm d d) (x : ℝSpace d) :
     topCoeff (fsmul f ω) x = f x * topCoeff ω x := by
