@@ -330,7 +330,7 @@ theorem mem_boundary_iff_halfSpaceFlatteningChart_mem [NeZero d] (i : Fin d) (x 
     y ∈ M.boundary ↔ M.halfSpaceFlatteningChart i x h y ∈ HalfSpaceBdry d := by
   simpa using M.mem_boundary_iff_halfSpaceFlatteningMap_mem i y
 
-/-- Strict interior membership expressed using the total function underlying a first-coordinate-facing
+/-- Strict interior membership via the total function underlying a first-coordinate-facing
 flattening chart. -/
 theorem mem_int_iff_halfSpaceFlatteningChart_mem [NeZero d] (i : Fin d) (x : ℝSpace d)
     (h : fderiv ℝ M.φ x (Pi.single i (1 : ℝ)) ≠ 0) (y : ℝSpace d) :

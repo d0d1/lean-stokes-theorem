@@ -52,6 +52,7 @@ import LeanStokes.Domain.Coordinate
 import LeanStokes.Domain.BoundaryOrient
 import LeanStokes.Domain.BoundaryIntegral
 import LeanStokes.Domain.BoundaryFlattening
+import LeanStokes.Domain.BoundaryChart
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain
 import LeanStokes.SingularCubeStokes.BdryBdry
