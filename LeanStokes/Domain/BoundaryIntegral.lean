@@ -1,0 +1,74 @@
+/-
+Copyright (c) 2026 LeanStokes Contributors. All rights reserved.
+Released under GPL-3.0-only license as described in the file LICENSE.
+Authors: LeanStokes Contributors
+-/
+import LeanStokes.Domain.BoundaryOrient
+import LeanStokes.DiffForm.Pullback
+import LeanStokes.Integration.OrientedIntegral
+
+/-!
+# Boundary Integral Model
+
+This module defines only the standard first-coordinate half-space boundary
+model.  It records the integral sign convention used as the target model for
+later boundary charts; it does not define chart-independent integration over an
+arbitrary regular sublevel-domain boundary.
+-/
+
+noncomputable section
+
+open MeasureTheory Topology Filter Set
+
+namespace SmoothDomain
+
+/-- Pull back an ambient `n`-form on `ℝ^(n+1)` to the standard boundary face
+`{x₀ = 0}` of the half-space model. -/
+def halfSpaceBoundaryPullback (n : ℕ) (ω : DiffForm (n + 1) n) : DiffForm n n :=
+  DiffForm.pullback (halfSpaceBoundaryParam n) ω
+
+/-- Integral over the standard boundary face of `HalfSpace (n+1) = {x₀ ≥ 0}`.
+
+The sign is `-1` because the outward normal is `-e₀`; hence the standard tangent
+coordinate frame `(e₁, …, eₙ)` is negative relative to the induced boundary
+orientation. -/
+def halfSpaceBoundaryIntegral (n : ℕ) (ω : DiffForm (n + 1) n) (S : Set (ℝSpace n)) :
+    ℝ :=
+  DiffForm.orientedIntegral (halfSpaceBoundaryPullback n ω) S (-1)
+
+/-- The top coefficient of the model boundary pullback is ambient evaluation on
+the standard tangent frame of the boundary face. -/
+theorem topCoeff_halfSpaceBoundaryPullback (n : ℕ) (ω : DiffForm (n + 1) n)
+    (y : ℝSpace n) :
+    DiffForm.topCoeff (halfSpaceBoundaryPullback n ω) y =
+      ω (halfSpaceBoundaryParam n y) (halfSpaceBoundaryFrame n) := by
+  unfold halfSpaceBoundaryPullback DiffForm.topCoeff DiffForm.pullback DiffForm.stdBasis
+  rw [ContinuousAlternatingMap.compContinuousLinearMap_apply]
+  congr 1
+  funext i
+  exact fderiv_halfSpaceBoundaryParam_stdBasis n y i
+
+/-- The model boundary integral is the negative of the plain top-form integral
+of the pulled-back form. -/
+theorem halfSpaceBoundaryIntegral_eq_neg (n : ℕ) (ω : DiffForm (n + 1) n)
+    (S : Set (ℝSpace n)) :
+    halfSpaceBoundaryIntegral n ω S =
+      -DiffForm.integral (halfSpaceBoundaryPullback n ω) S := by
+  simp [halfSpaceBoundaryIntegral, DiffForm.orientedIntegral]
+
+/-- Pullback to the model boundary commutes with scalar multiplication. -/
+theorem halfSpaceBoundaryPullback_smul (n : ℕ) (c : ℝ) (ω : DiffForm (n + 1) n) :
+    halfSpaceBoundaryPullback n (c • ω) = c • halfSpaceBoundaryPullback n ω := by
+  funext y
+  ext v
+  simp [halfSpaceBoundaryPullback, DiffForm.pullback]
+
+/-- Scalar multiplication factors out of the model boundary integral. -/
+theorem halfSpaceBoundaryIntegral_smul (n : ℕ) (c : ℝ) (ω : DiffForm (n + 1) n)
+    (S : Set (ℝSpace n)) :
+    halfSpaceBoundaryIntegral n (c • ω) S = c * halfSpaceBoundaryIntegral n ω S := by
+  simp [halfSpaceBoundaryIntegral_eq_neg, halfSpaceBoundaryPullback_smul, DiffForm.integral_smul]
+
+end SmoothDomain
+
+end
