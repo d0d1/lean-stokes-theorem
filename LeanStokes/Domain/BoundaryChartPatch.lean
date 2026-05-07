@@ -70,22 +70,35 @@ theorem det_ne_zero (P : BoundaryChartPatch M x) {y : ℝSpace d} (hy : y ∈ P.
   | neg =>
       exact ne_of_lt (P.det_neg hsign y hy)
 
+/-- Top-form change of variables through a boundary chart patch on any measurable subset of the
+certified patch neighborhood. -/
+theorem integral_image_eq_domainSign_mul_integral_pullback_on (P : BoundaryChartPatch M x)
+    {U : Set (ℝSpace d)} (hUmeas : MeasurableSet U) (hUsub : U ⊆ P.U)
+    (η : DiffForm d d) :
+    DiffForm.integral η (M.halfSpaceFlatteningMap P.i '' U) =
+      P.sign.domainSign *
+        DiffForm.integral (DiffForm.pullback (M.halfSpaceFlatteningMap P.i) η) U := by
+  cases hsign : P.sign with
+  | pos =>
+      simpa [JacobianSign.domainSign, hsign] using
+        M.integral_image_halfSpaceFlatteningMap_eq_integral_pullback_of_det_pos
+          P.i x P.h η hUmeas (fun y hy => P.subset_source (hUsub hy))
+          (fun y hy => P.det_pos hsign y (hUsub hy))
+  | neg =>
+      simpa [JacobianSign.domainSign, hsign] using
+        M.integral_image_halfSpaceFlatteningMap_eq_neg_integral_pullback_of_det_neg
+          P.i x P.h η hUmeas (fun y hy => P.subset_source (hUsub hy))
+          (fun y hy => P.det_neg hsign y (hUsub hy))
+
 /-- Top-form change of variables through a boundary chart patch, with the sign supplied by
 the patch's determinant branch. -/
 theorem integral_image_eq_domainSign_mul_integral_pullback (P : BoundaryChartPatch M x)
     (η : DiffForm d d) :
     DiffForm.integral η (M.halfSpaceFlatteningMap P.i '' P.U) =
       P.sign.domainSign *
-        DiffForm.integral (DiffForm.pullback (M.halfSpaceFlatteningMap P.i) η) P.U := by
-  cases hsign : P.sign with
-  | pos =>
-      simpa [JacobianSign.domainSign, hsign] using
-        M.integral_image_halfSpaceFlatteningMap_eq_integral_pullback_of_det_pos
-          P.i x P.h η P.measurableSet_U P.subset_source (P.det_pos hsign)
-  | neg =>
-      simpa [JacobianSign.domainSign, hsign] using
-        M.integral_image_halfSpaceFlatteningMap_eq_neg_integral_pullback_of_det_neg
-          P.i x P.h η P.measurableSet_U P.subset_source (P.det_neg hsign)
+        DiffForm.integral (DiffForm.pullback (M.halfSpaceFlatteningMap P.i) η) P.U :=
+  P.integral_image_eq_domainSign_mul_integral_pullback_on P.measurableSet_U
+    (fun _ hy => hy) η
 
 end BoundaryChartPatch
 
