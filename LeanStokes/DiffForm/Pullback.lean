@@ -16,7 +16,7 @@ noncomputable section
 
 namespace DiffForm
 
-variable {m n k : ℕ}
+variable {m n k l : ℕ}
 
 /-- Pull back a `k`-form on `ℝᵐ` along a map `f : ℝⁿ → ℝᵐ`.
 
@@ -30,6 +30,26 @@ def pullback (f : ℝSpace n → ℝSpace m) (η : DiffForm m k) : DiffForm n k 
     (x : ℝSpace n) :
     pullback f η x = (η (f x)).compContinuousLinearMap (fderiv ℝ f x) :=
   rfl
+
+/-- Pointwise composition law for differential-form pullback. -/
+theorem pullback_comp_apply
+    (f : ℝSpace m → ℝSpace n) (g : ℝSpace k → ℝSpace m)
+    (η : DiffForm n l) {x : ℝSpace k}
+    (hf : DifferentiableAt ℝ f (g x)) (hg : DifferentiableAt ℝ g x) :
+    pullback g (pullback f η) x = pullback (f ∘ g) η x := by
+  unfold pullback
+  rw [fderiv_comp x hf hg]
+  ext v
+  simp [Function.comp_def]
+
+/-- Composition law for differential-form pullback. -/
+theorem pullback_comp
+    (f : ℝSpace m → ℝSpace n) (g : ℝSpace k → ℝSpace m)
+    (η : DiffForm n l)
+    (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) :
+    pullback g (pullback f η) = pullback (f ∘ g) η := by
+  funext x
+  exact pullback_comp_apply f g η (hf (g x)) (hg x)
 
 /-- Pullback of a smooth differential form along a smooth map is differentiable as an
 alternating-map-valued function. -/
