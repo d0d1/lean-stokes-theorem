@@ -7,6 +7,7 @@ import LeanStokes.CubeStokes.Unified
 import LeanStokes.Domain.BoundaryIntegral
 import LeanStokes.DiffForm.ExteriorDeriv
 import LeanStokes.Integration.FormIntegral
+import Mathlib.Topology.Algebra.Support
 
 /-!
 # Box Stokes in `DiffForm.integral` Vocabulary
@@ -103,6 +104,83 @@ def VanishesOnBoxArtificialFaces (ω : DiffForm (n + 1) n)
     (∀ y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
       CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i.succ
         (Fin.insertNth i.succ (a i.succ) y) = 0)
+
+/-- Point-set swept out by the artificial face terms of a half-space box.
+
+This is the union of the high `x₀ = b₀` face and all successor-coordinate high/low faces.
+It deliberately omits the *term* for the true low `x₀ = a₀` half-space boundary face.  As a
+closed point-set it can still meet that true boundary along side edges/corners, and in degenerate
+boxes with `a 0 = b 0` the high `x₀` point-set coincides with the low `x₀` point-set. -/
+def boxArtificialFaces (a b : ℝSpace (n + 1)) : Set (ℝSpace (n + 1)) :=
+  {x | ∃ y ∈ Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+                   (b ∘ Fin.succAbove (0 : Fin (n + 1))),
+      x = Fin.insertNth (0 : Fin (n + 1)) (b (0 : Fin (n + 1))) y} ∪
+    ⋃ i : Fin n,
+      ({x | ∃ y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+          x = Fin.insertNth i.succ (b i.succ) y} ∪
+       {x | ∃ y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ),
+          x = Fin.insertNth i.succ (a i.succ) y})
+
+theorem mem_boxArtificialFaces_zero_high (a b : ℝSpace (n + 1))
+    {y : ℝSpace n}
+    (hy : y ∈ Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
+                  (b ∘ Fin.succAbove (0 : Fin (n + 1)))) :
+    Fin.insertNth (0 : Fin (n + 1)) (b (0 : Fin (n + 1))) y ∈
+      boxArtificialFaces a b := by
+  unfold boxArtificialFaces
+  exact Or.inl ⟨y, hy, rfl⟩
+
+theorem mem_boxArtificialFaces_succ_high (a b : ℝSpace (n + 1))
+    (i : Fin n) {y : ℝSpace n}
+    (hy : y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ)) :
+    Fin.insertNth i.succ (b i.succ) y ∈ boxArtificialFaces a b := by
+  unfold boxArtificialFaces
+  exact Or.inr (Set.mem_iUnion.mpr ⟨i, Or.inl ⟨y, hy, rfl⟩⟩)
+
+theorem mem_boxArtificialFaces_succ_low (a b : ℝSpace (n + 1))
+    (i : Fin n) {y : ℝSpace n}
+    (hy : y ∈ Icc (a ∘ Fin.succAbove i.succ) (b ∘ Fin.succAbove i.succ)) :
+    Fin.insertNth i.succ (a i.succ) y ∈ boxArtificialFaces a b := by
+  unfold boxArtificialFaces
+  exact Or.inr (Set.mem_iUnion.mpr ⟨i, Or.inr ⟨y, hy, rfl⟩⟩)
+
+/-- Pointwise zero of a form on every artificial face point-set implies the algebraic
+face-integrand vanishing hypothesis used by local half-space box Stokes. -/
+theorem vanishesOnBoxArtificialFaces_of_eq_zero_on_boxArtificialFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hzero : ∀ x ∈ boxArtificialFaces a b, ω x = 0) :
+    VanishesOnBoxArtificialFaces ω a b := by
+  constructor
+  · intro y hy
+    have hωzero :
+        ω (Fin.insertNth (0 : Fin (n + 1)) (b (0 : Fin (n + 1))) y) = 0 :=
+      hzero _ (mem_boxArtificialFaces_zero_high a b hy)
+    rw [CubeStokes.signedCoeff, CubeStokes.toCoordNForm, hωzero]
+    simp
+  · intro i
+    constructor
+    · intro y hy
+      have hωzero : ω (Fin.insertNth i.succ (b i.succ) y) = 0 :=
+        hzero _ (mem_boxArtificialFaces_succ_high a b i hy)
+      rw [CubeStokes.signedCoeff, CubeStokes.toCoordNForm, hωzero]
+      simp
+    · intro y hy
+      have hωzero : ω (Fin.insertNth i.succ (a i.succ) y) = 0 :=
+        hzero _ (mem_boxArtificialFaces_succ_low a b i hy)
+      rw [CubeStokes.signedCoeff, CubeStokes.toCoordNForm, hωzero]
+      simp
+
+/-- A support-disjointness version of artificial-face vanishing.  This is intentionally a
+point-set statement, so side edges/corners shared with the true low face are included in the
+disjointness hypothesis. -/
+theorem vanishesOnBoxArtificialFaces_of_disjoint_support_boxArtificialFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hdisj : Disjoint (Function.support ω) (boxArtificialFaces a b)) :
+    VanishesOnBoxArtificialFaces ω a b := by
+  apply vanishesOnBoxArtificialFaces_of_eq_zero_on_boxArtificialFaces ω a b
+  intro x hx
+  by_contra hne
+  exact (Set.disjoint_left.mp hdisj) hne hx
 
 /-- If every artificial box face vanishes pointwise, the cubical boundary integral is exactly the
 standard half-space boundary integral on the true lower `x₀ = 0` face. -/
