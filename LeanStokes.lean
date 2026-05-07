@@ -49,6 +49,7 @@ import LeanStokes.Integration.OrientedIntegral
 import LeanStokes.Domain.SmoothDomain
 import LeanStokes.Domain.HalfSpace
 import LeanStokes.Domain.BoundaryOrient
+import LeanStokes.Domain.BoundaryFlattening
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain
 import LeanStokes.SingularCubeStokes.BdryBdry
