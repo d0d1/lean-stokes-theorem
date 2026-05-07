@@ -19,7 +19,7 @@ build oriented change-of-variables for form integrals.
 noncomputable section
 
 open MeasureTheory Topology Filter Set MeasureTheory.Measure
-open scoped ENNReal
+open scoped ENNReal Topology
 
 namespace DiffForm
 
@@ -73,6 +73,25 @@ theorem topCoeff_pullback (f : ℝSpace d → ℝSpace d) (η : DiffForm d d)
       LinearMap.det (fderiv ℝ f x : ℝSpace d →ₗ[ℝ] ℝSpace d) * topCoeff η (f x) := by
   simpa [topCoeff, pullback] using
     topCoeff_compContinuousLinearMap (η (f x)) (fderiv ℝ f x)
+
+/-- Integrals of pullbacks agree when the maps and their total derivatives agree on the
+measurable integration set. -/
+theorem integral_pullback_congr_on {f g : ℝSpace d → ℝSpace d} (η : DiffForm d d)
+    {S : Set (ℝSpace d)} (hS : MeasurableSet S)
+    (hval : ∀ x ∈ S, f x = g x)
+    (hderiv : ∀ x ∈ S, fderiv ℝ f x = fderiv ℝ g x) :
+    integral (pullback f η) S = integral (pullback g η) S :=
+  integral_congr (pullback f η) (pullback g η) hS
+    (pullback_congr_on η hval hderiv)
+
+/-- Integrals of pullbacks agree when the maps agree in a neighborhood of every point of the
+measurable integration set. -/
+theorem integral_pullback_congr_of_eventuallyEq_on
+    {f g : ℝSpace d → ℝSpace d} (η : DiffForm d d) {S : Set (ℝSpace d)}
+    (hS : MeasurableSet S) (h : ∀ x ∈ S, f =ᶠ[𝓝 x] g) :
+    integral (pullback f η) S = integral (pullback g η) S :=
+  integral_congr (pullback f η) (pullback g η) hS
+    (fun x hx => pullback_congr_of_eventuallyEq η (h x hx))
 
 /-- Change of variables for top-form integrals under a map whose global derivative agrees with
 the within derivative on the source and has nonnegative determinant there. -/
