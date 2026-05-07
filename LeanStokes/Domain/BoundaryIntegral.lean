@@ -27,6 +27,17 @@ namespace SmoothDomain
 def halfSpaceBoundaryPullback (n : ℕ) (ω : DiffForm (n + 1) n) : DiffForm n n :=
   DiffForm.pullback (halfSpaceBoundaryParam n) ω
 
+/-- Pulling a pulled-back form to the model boundary is the same as pulling back along the
+composite boundary parametrization. -/
+theorem halfSpaceBoundaryPullback_pullback {m : ℕ}
+    (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
+    (hf : Differentiable ℝ f) :
+    halfSpaceBoundaryPullback n (DiffForm.pullback f ω) =
+      DiffForm.pullback (f ∘ halfSpaceBoundaryParam n) ω := by
+  simpa [halfSpaceBoundaryPullback] using
+    DiffForm.pullback_comp f (halfSpaceBoundaryParam n) ω hf
+      (halfSpaceBoundaryParam n).differentiable
+
 /-- Integral over the standard boundary face of `HalfSpace (n+1) = {x₀ ≥ 0}`.
 
 The sign is `-1` because the outward normal is `-e₀`; hence the standard tangent
@@ -55,6 +66,15 @@ theorem halfSpaceBoundaryIntegral_eq_neg (n : ℕ) (ω : DiffForm (n + 1) n)
     halfSpaceBoundaryIntegral n ω S =
       -DiffForm.integral (halfSpaceBoundaryPullback n ω) S := by
   simp [halfSpaceBoundaryIntegral, DiffForm.orientedIntegral]
+
+/-- Boundary integral of a pulled-back form, written as the negative plain integral of the
+direct pullback along the composite boundary parametrization. -/
+theorem halfSpaceBoundaryIntegral_pullback_eq_neg_integral_pullback_comp {m : ℕ}
+    (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
+    (S : Set (ℝSpace n)) (hf : Differentiable ℝ f) :
+    halfSpaceBoundaryIntegral n (DiffForm.pullback f ω) S =
+      -DiffForm.integral (DiffForm.pullback (f ∘ halfSpaceBoundaryParam n) ω) S := by
+  rw [halfSpaceBoundaryIntegral_eq_neg, halfSpaceBoundaryPullback_pullback f ω hf]
 
 /-- Pullback to the model boundary commutes with scalar multiplication. -/
 theorem halfSpaceBoundaryPullback_smul (n : ℕ) (c : ℝ) (ω : DiffForm (n + 1) n) :
