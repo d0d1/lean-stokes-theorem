@@ -51,6 +51,50 @@ def int : Set (ℝSpace d) := {x | M.φ x < 0}
 theorem continuous_φ : Continuous M.φ :=
   M.smooth_φ.continuous
 
+/-- Selected coordinate derivative of the defining function. -/
+def partialDeriv (i : Fin d) (x : ℝSpace d) : ℝ :=
+  fderiv ℝ M.φ x (Pi.single i (1 : ℝ))
+
+/-- The selected coordinate derivative of a smooth defining function is continuous. -/
+theorem continuous_partialDeriv (i : Fin d) :
+    Continuous (M.partialDeriv i) := by
+  simpa [partialDeriv] using
+    (ContinuousLinearMap.apply ℝ ℝ (Pi.single i (1 : ℝ))).continuous.comp
+      (M.smooth_φ.continuous_fderiv (by simp))
+
+/-- The set where a selected coordinate derivative is positive is open. -/
+theorem isOpen_pos_partialDeriv (i : Fin d) :
+    IsOpen {x : ℝSpace d | 0 < M.partialDeriv i x} := by
+  simpa using isOpen_lt continuous_const (M.continuous_partialDeriv i)
+
+/-- The set where a selected coordinate derivative is negative is open. -/
+theorem isOpen_neg_partialDeriv (i : Fin d) :
+    IsOpen {x : ℝSpace d | M.partialDeriv i x < 0} := by
+  simpa using isOpen_lt (M.continuous_partialDeriv i) continuous_const
+
+/-- A positive selected coordinate derivative remains positive on an open neighborhood. -/
+theorem exists_pos_partialDeriv_neighborhood {i : Fin d} {x : ℝSpace d}
+    (hpos : 0 < M.partialDeriv i x) :
+    ∃ U : Set (ℝSpace d), IsOpen U ∧ x ∈ U ∧ ∀ y ∈ U, 0 < M.partialDeriv i y :=
+  ⟨{y | 0 < M.partialDeriv i y}, M.isOpen_pos_partialDeriv i, hpos, fun _ hy => hy⟩
+
+/-- A negative selected coordinate derivative remains negative on an open neighborhood. -/
+theorem exists_neg_partialDeriv_neighborhood {i : Fin d} {x : ℝSpace d}
+    (hneg : M.partialDeriv i x < 0) :
+    ∃ U : Set (ℝSpace d), IsOpen U ∧ x ∈ U ∧ ∀ y ∈ U, M.partialDeriv i y < 0 :=
+  ⟨{y | M.partialDeriv i y < 0}, M.isOpen_neg_partialDeriv i, hneg, fun _ hy => hy⟩
+
+/-- A nonzero selected coordinate derivative remains nonzero on an open neighborhood. -/
+theorem exists_nonzero_partialDeriv_neighborhood {i : Fin d} {x : ℝSpace d}
+    (h : M.partialDeriv i x ≠ 0) :
+    ∃ U : Set (ℝSpace d), IsOpen U ∧ x ∈ U ∧ ∀ y ∈ U, M.partialDeriv i y ≠ 0 := by
+  by_cases hpos : 0 < M.partialDeriv i x
+  · rcases M.exists_pos_partialDeriv_neighborhood hpos with ⟨U, hUo, hxU, hU⟩
+    exact ⟨U, hUo, hxU, fun y hy => ne_of_gt (hU y hy)⟩
+  · have hneg : M.partialDeriv i x < 0 := lt_of_le_of_ne (le_of_not_gt hpos) h
+    rcases M.exists_neg_partialDeriv_neighborhood hneg with ⟨U, hUo, hxU, hU⟩
+    exact ⟨U, hUo, hxU, fun y hy => ne_of_lt (hU y hy)⟩
+
 /-- The carrier `{x | φ x ≤ 0}` is closed. -/
 theorem isClosed_carrier : IsClosed M.carrier := by
   simpa [carrier] using isClosed_le M.continuous_φ continuous_const
