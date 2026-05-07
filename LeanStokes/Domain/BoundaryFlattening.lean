@@ -220,6 +220,44 @@ theorem det_fderiv_halfSpaceFlatteningMap_ne_zero [NeZero d] (i : Fin d) (x : �
     simp
   exact mul_ne_zero hswap (neg_ne_zero.mpr h)
 
+/-- If the selected coordinate is already coordinate `0`, a negative selected partial derivative
+makes the first-coordinate-facing flattening Jacobian positive. -/
+theorem det_fderiv_halfSpaceFlatteningMap_pos_of_eq_zero [NeZero d] {i : Fin d}
+    {y : ℝSpace d} (hi : i = 0) (hneg : M.partialDeriv i y < 0) :
+    0 < LinearMap.det
+      (fderiv ℝ (M.halfSpaceFlatteningMap i) y : ℝSpace d →ₗ[ℝ] ℝSpace d) := by
+  subst i
+  rw [M.det_fderiv_halfSpaceFlatteningMap]
+  simpa [SmoothDomain.partialDeriv] using neg_pos.mpr hneg
+
+/-- If the selected coordinate is already coordinate `0`, a positive selected partial derivative
+makes the first-coordinate-facing flattening Jacobian negative. -/
+theorem det_fderiv_halfSpaceFlatteningMap_neg_of_eq_zero [NeZero d] {i : Fin d}
+    {y : ℝSpace d} (hi : i = 0) (hpos : 0 < M.partialDeriv i y) :
+    LinearMap.det
+      (fderiv ℝ (M.halfSpaceFlatteningMap i) y : ℝSpace d →ₗ[ℝ] ℝSpace d) < 0 := by
+  subst i
+  rw [M.det_fderiv_halfSpaceFlatteningMap]
+  simpa [SmoothDomain.partialDeriv] using neg_lt_zero.mpr hpos
+
+/-- If the selected coordinate is not coordinate `0`, a positive selected partial derivative makes
+the first-coordinate-facing flattening Jacobian positive. -/
+theorem det_fderiv_halfSpaceFlatteningMap_pos_of_ne_zero [NeZero d] {i : Fin d}
+    {y : ℝSpace d} (hi : i ≠ 0) (hpos : 0 < M.partialDeriv i y) :
+    0 < LinearMap.det
+      (fderiv ℝ (M.halfSpaceFlatteningMap i) y : ℝSpace d →ₗ[ℝ] ℝSpace d) := by
+  rw [M.det_fderiv_halfSpaceFlatteningMap]
+  simpa [SmoothDomain.partialDeriv, Equiv.Perm.sign_swap (Ne.symm hi)] using hpos
+
+/-- If the selected coordinate is not coordinate `0`, a negative selected partial derivative makes
+the first-coordinate-facing flattening Jacobian negative. -/
+theorem det_fderiv_halfSpaceFlatteningMap_neg_of_ne_zero [NeZero d] {i : Fin d}
+    {y : ℝSpace d} (hi : i ≠ 0) (hneg : M.partialDeriv i y < 0) :
+    LinearMap.det
+      (fderiv ℝ (M.halfSpaceFlatteningMap i) y : ℝSpace d →ₗ[ℝ] ℝSpace d) < 0 := by
+  rw [M.det_fderiv_halfSpaceFlatteningMap]
+  simpa [SmoothDomain.partialDeriv, Equiv.Perm.sign_swap (Ne.symm hi)] using hneg
+
 /-- The continuous linear equivalence supplied by a flattening derivative whose selected partial
 derivative is nonzero. -/
 def flatteningFDerivEquiv (i : Fin d) (x : ℝSpace d)
