@@ -63,6 +63,7 @@ import LeanStokes.Domain.BoundaryChartIntegral
 import LeanStokes.Domain.BoundaryChartPatch
 import LeanStokes.Domain.BoundaryChartPatchIntegral
 import LeanStokes.Domain.BoxStokes
+import LeanStokes.Domain.PullbackBoxStokes
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain
 import LeanStokes.SingularCubeStokes.BdryBdry
