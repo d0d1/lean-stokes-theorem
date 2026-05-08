@@ -5,6 +5,7 @@ Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.BoundaryChartPatchStokes
 import LeanStokes.Domain.DomainIntegral
+import LeanStokes.Domain.LocalBox
 import LeanStokes.Domain.PartitionOfUnity
 import LeanStokes.Integration.Localization
 
@@ -73,6 +74,60 @@ structure BoundaryLocalizedStokesPiece (M : SmoothDomain (n + 1))
 namespace BoundaryLocalizedStokesPiece
 
 variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Extract the pure boundary chart-box geometry from a localized boundary Stokes piece. -/
+def chartBox (Q : BoundaryLocalizedStokesPiece M ω) : BoundaryChartBox M where
+  x := Q.x
+  P := Q.P
+  U := Q.U
+  a := Q.a
+  b := Q.b
+  U_measurable := Q.U_measurable
+  U_subset_patch := Q.U_subset_patch
+  U_subset_carrier := Q.U_subset_carrier
+  flattening_image_eq_box := Q.flattening_image_eq_box
+  box_le := Q.box_le
+  box_zero_low := Q.box_zero_low
+
+/-- Build a localized boundary Stokes piece from pure chart-box geometry and scalar/form data. -/
+def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
+    (scalar_smooth : ContDiff ℝ ⊤ χ)
+    (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
+    (localized_extd_integrable :
+      IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
+    (model_pullback_differentiable :
+      Differentiable ℝ
+        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
+          (DiffForm.fsmul χ ω)))
+    (model_coord_smooth :
+      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
+        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
+          (DiffForm.fsmul χ ω))))
+    (scalar_support_disjoint_artificial :
+      Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
+        (CubeStokes.boxArtificialFaces G.a G.b))
+    (scalar_eventually_zero_off_U_in_carrier :
+      ∀ y ∈ M.carrier, y ∉ G.U → χ =ᶠ[𝓝 y] fun _ => 0) :
+    BoundaryLocalizedStokesPiece M ω where
+  x := G.x
+  P := G.P
+  χ := χ
+  U := G.U
+  a := G.a
+  b := G.b
+  U_measurable := G.U_measurable
+  U_subset_patch := G.U_subset_patch
+  U_subset_carrier := G.U_subset_carrier
+  flattening_image_eq_box := G.flattening_image_eq_box
+  box_le := G.box_le
+  box_zero_low := G.box_zero_low
+  scalar_smooth := scalar_smooth
+  localized_differentiable := localized_differentiable
+  localized_extd_integrable := localized_extd_integrable
+  model_pullback_differentiable := model_pullback_differentiable
+  model_coord_smooth := model_coord_smooth
+  scalar_support_disjoint_artificial := scalar_support_disjoint_artificial
+  scalar_eventually_zero_off_U_in_carrier := scalar_eventually_zero_off_U_in_carrier
 
 /-- Boundary-coordinate tail of the model half-space box for a localized piece. -/
 def boundaryTail (Q : BoundaryLocalizedStokesPiece M ω) : Set (ℝSpace n) :=
@@ -174,6 +229,35 @@ structure InteriorLocalizedStokesPiece (M : SmoothDomain (n + 1))
 namespace InteriorLocalizedStokesPiece
 
 variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Extract the pure interior-box geometry from a localized interior Stokes piece. -/
+def interiorBox (Q : InteriorLocalizedStokesPiece M ω) : InteriorBox M where
+  a := Q.a
+  b := Q.b
+  box_le := Q.box_le
+  box_subset_carrier := Q.box_subset_carrier
+
+/-- Build a localized interior Stokes piece from pure interior-box geometry and scalar/form data. -/
+def ofInteriorBox (G : InteriorBox M) (χ : ℝSpace (n + 1) → ℝ)
+    (scalar_smooth : ContDiff ℝ ⊤ χ)
+    (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
+    (localized_extd_integrable :
+      IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
+    (scalar_support_disjoint_boundary :
+      Disjoint (Function.support χ) (CubeStokes.boxBoundaryFaces G.a G.b))
+    (scalar_eventually_zero_off_box_in_carrier :
+      ∀ y ∈ M.carrier, y ∉ Icc G.a G.b → χ =ᶠ[𝓝 y] fun _ => 0) :
+    InteriorLocalizedStokesPiece M ω where
+  χ := χ
+  a := G.a
+  b := G.b
+  box_le := G.box_le
+  box_subset_carrier := G.box_subset_carrier
+  scalar_smooth := scalar_smooth
+  localized_differentiable := localized_differentiable
+  localized_extd_integrable := localized_extd_integrable
+  scalar_support_disjoint_boundary := scalar_support_disjoint_boundary
+  scalar_eventually_zero_off_box_in_carrier := scalar_eventually_zero_off_box_in_carrier
 
 /-- Carrier integral of an interior localized piece is zero. -/
 theorem carrierIntegral_eq_zero (Q : InteriorLocalizedStokesPiece M ω)
