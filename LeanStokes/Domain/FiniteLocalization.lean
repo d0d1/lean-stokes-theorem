@@ -6,6 +6,8 @@ Authors: LeanStokes Contributors
 import LeanStokes.Domain.BoundaryChartPatchStokes
 import LeanStokes.Domain.DomainIntegral
 import LeanStokes.Integration.Localization
+import Mathlib.Geometry.Manifold.PartitionOfUnity
+import Mathlib.Topology.Compactness.LocallyFinite
 
 /-!
 # Finite Localized Boundary Stokes Assembly
@@ -20,11 +22,64 @@ domain Stokes theorem.
 noncomputable section
 
 open Set MeasureTheory
-open scoped BigOperators Topology
+open scoped BigOperators Topology Manifold
 
 namespace SmoothDomain
 
 variable {n : ℕ}
+
+section SmoothPartition
+
+variable {ι : Type*} (M : SmoothDomain (n + 1))
+
+/-- Indices whose topological support meets the compact carrier.
+
+This is the finite active set used to turn a locally finite ambient smooth partition of unity into
+the finite local partition hypothesis required by localized Stokes assembly.  The use of
+`tsupport`, rather than raw support, is essential near boundary points of the carrier. -/
+def compactActiveFinset
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ) :
+    Finset ι :=
+  (ρ.toPartitionOfUnity.locallyFinite_tsupport.finite_nonempty_inter_compact
+    M.carrier_isCompact).toFinset
+
+@[simp]
+theorem mem_compactActiveFinset
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    {i : ι} :
+    i ∈ M.compactActiveFinset ρ ↔ (tsupport (ρ i) ∩ M.carrier).Nonempty := by
+  simp [compactActiveFinset]
+
+/-- At a carrier point, every index in the pointwise topological support is globally active. -/
+theorem fintsupport_subset_compactActiveFinset
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    {y : ℝSpace (n + 1)} (hy : y ∈ M.carrier) :
+    ρ.fintsupport y ⊆ M.compactActiveFinset ρ := by
+  intro i hi
+  rw [mem_compactActiveFinset]
+  rw [ρ.mem_fintsupport_iff] at hi
+  exact ⟨y, hi, hy⟩
+
+/-- Near a carrier point, the pointwise support of an ambient smooth partition is contained in the
+compact active set. -/
+theorem eventually_finsupport_subset_compactActiveFinset
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    {y : ℝSpace (n + 1)} (hy : y ∈ M.carrier) :
+    ∀ᶠ z in 𝓝 y, ρ.finsupport z ⊆ M.compactActiveFinset ρ :=
+  (ρ.eventually_finsupport_subset y).mono fun _ hz =>
+    hz.trans (M.fintsupport_subset_compactActiveFinset ρ hy)
+
+/-- A globally defined ambient smooth partition of unity has a finite subfamily whose scalar sum is
+equal to one in an ambient neighborhood of every carrier point. -/
+theorem smoothPartition_compactActive_eventuallyEq_one
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    {y : ℝSpace (n + 1)} (hy : y ∈ M.carrier) :
+    (fun z => ∑ i ∈ M.compactActiveFinset ρ, ρ i z) =ᶠ[𝓝 y] fun _ => 1 := by
+  filter_upwards [M.eventually_finsupport_subset_compactActiveFinset ρ hy] with z hz
+  simpa using
+    (ρ.sum_finsupport' z (show z ∈ (univ : Set (ℝSpace (n + 1))) by simp) hz)
+
+end SmoothPartition
 
 /-- One certified scalar-localized boundary patch contribution to Stokes.
 
@@ -232,6 +287,23 @@ theorem finite_localized_stokes {M : SmoothDomain (n + 1)}
   intro i _
   exact (piece i).carrier_integral_eq_contribution
 
+/-- Finite localized Stokes assembly for a family of proof-carrying pieces whose scalar cutoffs are
+the functions of an ambient smooth partition of unity.
+
+The active finite set is extracted from topological supports meeting the compact carrier, so the
+partition equality holds in ambient neighborhoods of carrier points. -/
+theorem finite_localized_stokes_of_smoothPartition {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (piece : ι → LocalizedStokesPiece M ω)
+    (hχ : ∀ i, (piece i).χ = fun z => ρ i z) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ M.compactActiveFinset ρ, (piece i).contribution := by
+  refine finite_localized_stokes (M.compactActiveFinset ρ) piece ?_
+  intro y hy
+  filter_upwards [M.smoothPartition_compactActive_eventuallyEq_one ρ hy] with z hz
+  simpa [hχ] using hz
+
 /-- Finite assembly of certified localized boundary-box Stokes pieces.
 
 The theorem proves that the domain integral of `dω` over the compact carrier equals the finite sum
@@ -249,6 +321,20 @@ theorem finite_boundary_localized_stokes {M : SmoothDomain (n + 1)}
   simpa [BoundaryLocalizedStokesPiece.toLocalizedStokesPiece] using
     finite_localized_stokes s
       (fun i => (piece i).toLocalizedStokesPiece hω) hpartition
+
+/-- Boundary-piece finite assembly using the finite active set of an ambient smooth partition of
+unity. -/
+theorem finite_boundary_localized_stokes_of_smoothPartition {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (piece : ι → BoundaryLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hχ : ∀ i, (piece i).χ = fun z => ρ i z) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ M.compactActiveFinset ρ, (piece i).boundaryContribution := by
+  simpa [BoundaryLocalizedStokesPiece.toLocalizedStokesPiece] using
+    finite_localized_stokes_of_smoothPartition ρ
+      (fun i => (piece i).toLocalizedStokesPiece hω) hχ
 
 end SmoothDomain
 
