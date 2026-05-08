@@ -19,7 +19,7 @@ neighborhoods of carrier points, not merely relative neighborhoods.
 noncomputable section
 
 open Set
-open scoped BigOperators Topology Manifold
+open scoped BigOperators Topology Manifold ContDiff
 
 /-- If the topological support of a function is contained in `U`, then the function is eventually
 zero near any point outside `U`. -/
@@ -45,6 +45,14 @@ variable {ι E H M : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
   [TopologicalSpace H] {I : ModelWithCorners ℝ E H} [TopologicalSpace M]
   [ChartedSpace H M] {s : Set M} {U : ι → Set M}
   {ρ : SmoothPartitionOfUnity ι I M s}
+
+/-- A member of a Euclidean smooth partition of unity is a `C^∞` scalar function. -/
+theorem contDiff_apply_infty {d : ℕ} {s : Set (ℝSpace d)}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace d)) (ℝSpace d) s) (i : ι) :
+    ContDiff ℝ ∞ (fun z => ρ i z) :=
+  by
+    change ContDiff ℝ ∞ ⇑(ρ i)
+    exact (ρ i).contMDiff.contDiff
 
 /-- A partition element subordinate to `U i` is eventually zero near points outside `U i`. -/
 theorem IsSubordinate.eventuallyEq_zero_of_notMem
