@@ -200,23 +200,18 @@ theorem support_disjoint_boxBoundaryFaces (C : InteriorBoxCoverMember M)
 /-- Build an interior localized Stokes piece from a smooth partition cutoff subordinate to an
 interior box-controlled cover member.
 
-Only smoothness, localized differentiability, and support control are derived here; the analytic
-integrability hypothesis remains explicit. -/
+Smoothness, localized differentiability, support control, and compact-carrier integrability are
+derived from the smooth partition cutoff and smooth form. -/
 def toInteriorLocalizedStokesPieceOfSmoothPartition
     {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (C : InteriorBoxCoverMember M)
     (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
     (i : ι) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (hχV : tsupport (fun z => ρ i z) ⊆ C.V)
-    (localized_extd_integrable :
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume) :
+    (hχV : tsupport (fun z => ρ i z) ⊆ C.V) :
     InteriorLocalizedStokesPiece M ω :=
   InteriorLocalizedStokesPiece.ofInteriorBoxSmoothPartitionOfTSupport ρ i C.G hω
     (C.tsupport_subset_box hχV)
     (C.tsupport_disjoint_boxBoundaryFaces hχV)
-    localized_extd_integrable
 
 end InteriorBoxCoverMember
 
@@ -399,23 +394,18 @@ theorem support_comp_disjoint_artificial (C : BoundaryBoxCoverMember M)
 boundary box-controlled cover member.
 
 Only scalar smoothness, localized differentiability, eventual-zero support control, and model
-artificial-face support control are derived here.  Integrability remains an explicit analytic
-hypothesis. -/
+artificial-face support control are local hypotheses; compact-carrier integrability follows from
+smoothness of the localized form. -/
 def toBoundaryLocalizedStokesPieceOfSmoothPartition
     {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (C : BoundaryBoxCoverMember M)
     (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
     (i : ι) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (hχV : tsupport (fun z => ρ i z) ⊆ C.V)
-    (localized_extd_integrable :
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume) :
+    (hχV : tsupport (fun z => ρ i z) ⊆ C.V) :
     BoundaryLocalizedStokesPiece M ω :=
   BoundaryLocalizedStokesPiece.ofChartBox C.G (fun z => ρ i z)
     (ρ.contDiff_apply_infty i)
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
-    localized_extd_integrable
     (C.support_comp_disjoint_artificial hχV)
     (C.eventuallyEq_zero_off_U_in_carrier hχV)
 
@@ -655,10 +645,6 @@ noncomputable def activeBoxControlledContributionCertificate
       (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (localized_extd_integrable : ∀ j : { i // i ∈ M.compactActiveFinset ρ },
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-        M.carrier volume)
     (j : { i // i ∈ M.compactActiveFinset ρ }) :
     { r : ℝ //
       DiffForm.integral (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω))
@@ -669,14 +655,13 @@ noncomputable def activeBoxControlledContributionCertificate
       have hχV : tsupport (fun z => ρ j.1 z) ⊆ C.V := by
         simpa [hI, boxControlledCarrierCover] using hspec.2
       let Q :=
-        (C.toInteriorLocalizedStokesPieceOfSmoothPartition ρ j.1 hω hχV
-          (localized_extd_integrable j)).toLocalizedStokesPiece hω
+        (C.toInteriorLocalizedStokesPieceOfSmoothPartition ρ j.1 hω hχV).toLocalizedStokesPiece
+          hω
       exact ⟨0, by simpa [Q] using Q.carrier_integral_eq_contribution⟩
   | boundary C =>
       have hχV : tsupport (fun z => ρ j.1 z) ⊆ C.V := by
         simpa [hI, boxControlledCarrierCover] using hspec.2
       let Q := C.toBoundaryLocalizedStokesPieceOfSmoothPartition ρ j.1 hω hχV
-        (localized_extd_integrable j)
       have hQ := (Q.toLocalizedStokesPiece hω).carrier_integral_eq_contribution
       exact ⟨Q.boundaryContribution, by simpa [Q] using hQ⟩
 
@@ -687,12 +672,8 @@ noncomputable def activeBoxControlledContribution
       (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (localized_extd_integrable : ∀ j : { i // i ∈ M.compactActiveFinset ρ },
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-        M.carrier volume)
     (j : { i // i ∈ M.compactActiveFinset ρ }) : ℝ :=
-  (activeBoxControlledContributionCertificate ρ hρ hω localized_extd_integrable j).1
+  (activeBoxControlledContributionCertificate ρ hρ hω j).1
 
 /-- Localized Stokes piece carried by one active box-controlled partition element. -/
 noncomputable def activeBoxControlledLocalizedPiece
@@ -701,19 +682,16 @@ noncomputable def activeBoxControlledLocalizedPiece
       (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (localized_extd_integrable : ∀ j : { i // i ∈ M.compactActiveFinset ρ },
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-        M.carrier volume)
     (j : { i // i ∈ M.compactActiveFinset ρ }) : LocalizedStokesPiece M ω where
   χ := fun z => ρ j.1 z
   localized_differentiable :=
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty j.1) hω).differentiable (by simp))
-  localized_extd_integrable := localized_extd_integrable j
-  contribution := activeBoxControlledContribution ρ hρ hω localized_extd_integrable
-    j
+  localized_extd_integrable :=
+    M.integrableOn_topCoeff_extd_carrier_of_contDiff
+      (DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty j.1) hω)
+  contribution := activeBoxControlledContribution ρ hρ hω j
   carrier_integral_eq_contribution :=
-    (activeBoxControlledContributionCertificate ρ hρ hω localized_extd_integrable j).2
+    (activeBoxControlledContributionCertificate ρ hρ hω j).2
 
 @[simp]
 theorem activeBoxControlledLocalizedPiece_chi
@@ -722,12 +700,8 @@ theorem activeBoxControlledLocalizedPiece_chi
       (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (localized_extd_integrable : ∀ j : { i // i ∈ M.compactActiveFinset ρ },
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-        M.carrier volume)
     (j : { i // i ∈ M.compactActiveFinset ρ }) :
-    (activeBoxControlledLocalizedPiece ρ hρ hω localized_extd_integrable j).χ =
+    (activeBoxControlledLocalizedPiece ρ hρ hω j).χ =
       fun z => ρ j.1 z :=
   rfl
 
@@ -738,19 +712,14 @@ theorem finite_boxControlled_localized_stokes_of_smoothPartition
     (ρ : SmoothPartitionOfUnity (Option (BoxControlledCoverIndex M))
       (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
-    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (localized_extd_integrable : ∀ j : { i // i ∈ M.compactActiveFinset ρ },
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-        M.carrier volume) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     M.domainIntegral (DiffForm.extd ω) =
       ∑ j ∈ (M.compactActiveFinset ρ).attach,
-        activeBoxControlledContribution ρ hρ hω localized_extd_integrable j := by
+        activeBoxControlledContribution ρ hρ hω j := by
   simpa [activeBoxControlledLocalizedPiece, activeBoxControlledContribution] using
     finite_localized_stokes_of_smoothPartition_on_active ρ
-      (activeBoxControlledLocalizedPiece ρ hρ hω localized_extd_integrable)
-      (fun j => activeBoxControlledLocalizedPiece_chi ρ hρ hω localized_extd_integrable
-        j)
+      (activeBoxControlledLocalizedPiece ρ hρ hω)
+      (fun j => activeBoxControlledLocalizedPiece_chi ρ hρ hω j)
 
 end SmoothDomain
 

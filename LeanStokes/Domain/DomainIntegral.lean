@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.SmoothDomain
+import LeanStokes.DiffForm.ExteriorDeriv
 import LeanStokes.Integration.FormIntegral
 
 /-!
@@ -42,6 +43,15 @@ theorem integrableOn_topCoeff_carrier_of_continuous (M : SmoothDomain d)
     {η : DiffForm d d} (hη : Continuous (DiffForm.topCoeff η)) :
     IntegrableOn (DiffForm.topCoeff η) M.carrier volume :=
   M.integrableOn_topCoeff_carrier_of_continuousOn hη.continuousOn
+
+/-- The top coefficient of the exterior derivative of a smooth codimension-one form is integrable
+on the compact carrier. -/
+theorem integrableOn_topCoeff_extd_carrier_of_contDiff {n : ℕ}
+    (M : SmoothDomain (n + 1)) {ω : DiffForm (n + 1) n}
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
+    IntegrableOn (DiffForm.topCoeff (DiffForm.extd ω)) M.carrier volume :=
+  M.integrableOn_topCoeff_carrier_of_continuous
+    (DiffForm.continuous_topCoeff (DiffForm.continuous_extd ω hω))
 
 /-- Domain integration is additive when both top coefficients are integrable on the carrier. -/
 theorem domainIntegral_add (M : SmoothDomain d) (η₁ η₂ : DiffForm d d)

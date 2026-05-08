@@ -32,6 +32,17 @@ variable {d n : ℕ} {x : ℝSpace d}
 def extd (ω : DiffForm d n) : DiffForm d (n + 1) :=
   fun x => _root_.extDeriv ω x
 
+/-- The exterior derivative of a globally smooth form is continuous. -/
+theorem continuous_extd (ω : DiffForm d n) (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
+    Continuous (extd ω) := by
+  unfold extd
+  change Continuous (fun x =>
+    ContinuousAlternatingMap.alternatizeUncurryFin (fderiv ℝ ω x))
+  change Continuous
+    ((ContinuousAlternatingMap.alternatizeUncurryFinCLM ℝ (ℝSpace d) ℝ) ∘
+      (fderiv ℝ ω))
+  exact (ContinuousLinearMap.continuous _).comp (hω.continuous_fderiv (by simp))
+
 /-- The exterior derivative within a set. -/
 def extdWithin (ω : DiffForm d n) (s : Set (ℝSpace d)) :
     DiffForm d (n + 1) :=

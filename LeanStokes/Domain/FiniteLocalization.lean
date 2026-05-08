@@ -55,8 +55,6 @@ structure BoundaryLocalizedStokesPiece (M : SmoothDomain (n + 1))
   box_zero_low : a (0 : Fin (n + 1)) = 0
   scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ
   localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
-  localized_extd_integrable :
-    IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
   scalar_support_disjoint_artificial :
     Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart P.i x P.h).symm))
       (CubeStokes.boxArtificialFaces a b)
@@ -85,8 +83,6 @@ def chartBox (Q : BoundaryLocalizedStokesPiece M ω) : BoundaryChartBox M where
 def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
     (scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
     (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
-    (localized_extd_integrable :
-      IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
     (scalar_support_disjoint_artificial :
       Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
         (CubeStokes.boxArtificialFaces G.a G.b))
@@ -107,23 +103,18 @@ def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
   box_zero_low := G.box_zero_low
   scalar_smooth := scalar_smooth
   localized_differentiable := localized_differentiable
-  localized_extd_integrable := localized_extd_integrable
   scalar_support_disjoint_artificial := scalar_support_disjoint_artificial
   scalar_eventually_zero_off_U_in_carrier := scalar_eventually_zero_off_U_in_carrier
 
 /-- Build a localized boundary piece from chart-box geometry and a smooth partition cutoff whose
 topological support lies in the chart-box set.
 
-This derives scalar smoothness, localized differentiability, and off-box eventual-zero fields;
-integrability and artificial-face support disjointness remain explicit hypotheses. -/
+This derives scalar smoothness, localized differentiability, and off-box eventual-zero fields.
+Artificial-face support disjointness remains an explicit local-support hypothesis. -/
 def ofChartBoxSmoothPartitionOfTSupportSubset {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
     (i : ι) (G : BoundaryChartBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (htsupport : tsupport (fun z => ρ i z) ⊆ G.U)
-    (localized_extd_integrable :
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume)
     (scalar_support_disjoint_artificial :
       Disjoint
         (Function.support ((fun z => ρ i z) ∘
@@ -133,7 +124,6 @@ def ofChartBoxSmoothPartitionOfTSupportSubset {ι : Type*} {s : Set (ℝSpace (n
   ofChartBox G (fun z => ρ i z)
     (ρ.contDiff_apply_infty i)
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
-    localized_extd_integrable
     scalar_support_disjoint_artificial
     (fun y _ hyU =>
       eventuallyEq_zero_of_tsupport_subset_of_notMem (f := fun z => ρ i z) htsupport hyU)
@@ -147,10 +137,6 @@ def ofChartBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (Ucov : ι → Set (ℝSpace (n + 1))) (hρU : ρ.IsSubordinate Ucov)
     (i : ι) (G : BoundaryChartBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hUsub : Ucov i ⊆ G.U)
-    (localized_extd_integrable :
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume)
     (scalar_support_disjoint_artificial :
       Disjoint
         (Function.support ((fun z => ρ i z) ∘
@@ -159,7 +145,6 @@ def ofChartBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
     BoundaryLocalizedStokesPiece M ω :=
   ofChartBoxSmoothPartitionOfTSupportSubset ρ i G hω
     (by simpa using (hρU i).trans hUsub)
-    localized_extd_integrable
     scalar_support_disjoint_artificial
 
 /-- Boundary-coordinate tail of the model half-space box for a localized piece. -/
@@ -229,7 +214,9 @@ def toLocalizedStokesPiece (Q : BoundaryLocalizedStokesPiece M ω)
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω) : LocalizedStokesPiece M ω where
   χ := Q.χ
   localized_differentiable := Q.localized_differentiable
-  localized_extd_integrable := Q.localized_extd_integrable
+  localized_extd_integrable :=
+    M.integrableOn_topCoeff_extd_carrier_of_contDiff
+      (DiffForm.isSmooth_fsmul Q.scalar_smooth hω)
   contribution := Q.boundaryContribution
   carrier_integral_eq_contribution := Q.carrierIntegral_eq_boundaryContribution hω
 
@@ -251,8 +238,6 @@ structure InteriorLocalizedStokesPiece (M : SmoothDomain (n + 1))
   box_subset_carrier : Icc a b ⊆ M.carrier
   scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ
   localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
-  localized_extd_integrable :
-    IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
   scalar_support_disjoint_boundary :
     Disjoint (Function.support χ) (CubeStokes.boxBoundaryFaces a b)
   scalar_eventually_zero_off_box_in_carrier :
@@ -273,8 +258,6 @@ def interiorBox (Q : InteriorLocalizedStokesPiece M ω) : InteriorBox M where
 def ofInteriorBox (G : InteriorBox M) (χ : ℝSpace (n + 1) → ℝ)
     (scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
     (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
-    (localized_extd_integrable :
-      IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
     (scalar_support_disjoint_boundary :
       Disjoint (Function.support χ) (CubeStokes.boxBoundaryFaces G.a G.b))
     (scalar_eventually_zero_off_box_in_carrier :
@@ -287,7 +270,6 @@ def ofInteriorBox (G : InteriorBox M) (χ : ℝSpace (n + 1) → ℝ)
   box_subset_carrier := G.box_subset_carrier
   scalar_smooth := scalar_smooth
   localized_differentiable := localized_differentiable
-  localized_extd_integrable := localized_extd_integrable
   scalar_support_disjoint_boundary := scalar_support_disjoint_boundary
   scalar_eventually_zero_off_box_in_carrier := scalar_eventually_zero_off_box_in_carrier
 
@@ -295,22 +277,17 @@ def ofInteriorBox (G : InteriorBox M) (χ : ℝSpace (n + 1) → ℝ)
 topological support lies in the box and avoids the cubical boundary faces.
 
 This derives scalar smoothness, localized differentiability, support-disjointness from the formal
-box faces, and eventual zero off the box.  Integrability remains an explicit analytic hypothesis. -/
+box faces, and eventual zero off the box. -/
 def ofInteriorBoxSmoothPartitionOfTSupport {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
     (i : ι) (G : InteriorBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (htsupport_box : tsupport (fun z => ρ i z) ⊆ Icc G.a G.b)
     (htsupport_disjoint_boundary :
-      Disjoint (tsupport (fun z => ρ i z)) (CubeStokes.boxBoundaryFaces G.a G.b))
-    (localized_extd_integrable :
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume) :
+      Disjoint (tsupport (fun z => ρ i z)) (CubeStokes.boxBoundaryFaces G.a G.b)) :
     InteriorLocalizedStokesPiece M ω :=
   ofInteriorBox G (fun z => ρ i z)
     (ρ.contDiff_apply_infty i)
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
-    localized_extd_integrable
     (htsupport_disjoint_boundary.mono_left (subset_tsupport (fun z => ρ i z)))
     (fun y _ hybox =>
       eventuallyEq_zero_of_tsupport_subset_of_notMem
@@ -323,16 +300,11 @@ def ofInteriorBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (Ucov : ι → Set (ℝSpace (n + 1))) (hρU : ρ.IsSubordinate Ucov)
     (i : ι) (G : InteriorBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hUsub : Ucov i ⊆ Icc G.a G.b)
-    (hUdisj : Disjoint (Ucov i) (CubeStokes.boxBoundaryFaces G.a G.b))
-    (localized_extd_integrable :
-      IntegrableOn
-        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume) :
+    (hUdisj : Disjoint (Ucov i) (CubeStokes.boxBoundaryFaces G.a G.b)) :
     InteriorLocalizedStokesPiece M ω :=
   ofInteriorBoxSmoothPartitionOfTSupport ρ i G hω
     (by simpa using (hρU i).trans hUsub)
     (by simpa using hUdisj.mono_left (hρU i))
-    localized_extd_integrable
 
 /-- Carrier integral of an interior localized piece is zero. -/
 theorem carrierIntegral_eq_zero (Q : InteriorLocalizedStokesPiece M ω)
@@ -361,7 +333,9 @@ def toLocalizedStokesPiece (Q : InteriorLocalizedStokesPiece M ω)
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω) : LocalizedStokesPiece M ω where
   χ := Q.χ
   localized_differentiable := Q.localized_differentiable
-  localized_extd_integrable := Q.localized_extd_integrable
+  localized_extd_integrable :=
+    M.integrableOn_topCoeff_extd_carrier_of_contDiff
+      (DiffForm.isSmooth_fsmul Q.scalar_smooth hω)
   contribution := 0
   carrier_integral_eq_contribution := Q.carrierIntegral_eq_zero hω
 
