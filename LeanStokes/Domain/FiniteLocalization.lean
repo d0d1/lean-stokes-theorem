@@ -1,0 +1,142 @@
+/-
+Copyright (c) 2026 LeanStokes Contributors. All rights reserved.
+Released under GPL-3.0-only license as described in the file LICENSE.
+Authors: LeanStokes Contributors
+-/
+import LeanStokes.Domain.BoundaryChartPatchStokes
+import LeanStokes.Domain.DomainIntegral
+import LeanStokes.Integration.Localization
+
+/-!
+# Finite Localized Boundary Stokes Assembly
+
+This module packages the data for a finite family of localized boundary-box
+Stokes pieces and proves the finite summation theorem for that certified data.
+The resulting boundary side is still a sum of patch-local boundary integrals; it
+is not yet a chart-independent global boundary integral or the final compact
+domain Stokes theorem.
+-/
+
+noncomputable section
+
+open Set MeasureTheory
+open scoped BigOperators Topology
+
+namespace SmoothDomain
+
+variable {n : ℕ}
+
+/-- One certified scalar-localized boundary patch contribution to Stokes.
+
+The fields are deliberately explicit: this structure records the hypotheses
+needed to assemble local chart-box Stokes statements without claiming a product
+rule, global chart smoothness, or chart-independent boundary integration. -/
+structure BoundaryLocalizedStokesPiece (M : SmoothDomain (n + 1))
+    (ω : DiffForm (n + 1) n) where
+  /-- Boundary center of the certified chart patch. -/
+  x : ℝSpace (n + 1)
+  /-- Determinant-sign-stable boundary chart patch. -/
+  P : BoundaryChartPatch M x
+  /-- Scalar cutoff for this localized piece. -/
+  χ : ℝSpace (n + 1) → ℝ
+  /-- Original-side local set whose flattening image is a half-space box. -/
+  U : Set (ℝSpace (n + 1))
+  /-- Lower corner of the model half-space box. -/
+  a : ℝSpace (n + 1)
+  /-- Upper corner of the model half-space box. -/
+  b : ℝSpace (n + 1)
+  U_measurable : MeasurableSet U
+  U_subset_patch : U ⊆ P.U
+  U_subset_carrier : U ⊆ M.carrier
+  flattening_image_eq_box : M.halfSpaceFlatteningMap P.i '' U = Icc a b
+  box_le : a ≤ b
+  box_zero_low : a (0 : Fin (n + 1)) = 0
+  scalar_smooth : ContDiff ℝ ⊤ χ
+  localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
+  localized_extd_integrable :
+    IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
+  model_pullback_differentiable :
+    Differentiable ℝ
+      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm
+        (DiffForm.fsmul χ ω))
+  model_coord_smooth :
+    CubeStokes.IsSmooth (CubeStokes.toCoordNForm
+      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm
+        (DiffForm.fsmul χ ω)))
+  scalar_support_disjoint_artificial :
+    Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart P.i x P.h).symm))
+      (CubeStokes.boxArtificialFaces a b)
+  scalar_eventually_zero_off_U_in_carrier :
+    ∀ y ∈ M.carrier, y ∉ U → χ =ᶠ[𝓝 y] fun _ => 0
+
+namespace BoundaryLocalizedStokesPiece
+
+variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Boundary-coordinate tail of the model half-space box for a localized piece. -/
+def boundaryTail (Q : BoundaryLocalizedStokesPiece M ω) : Set (ℝSpace n) :=
+  Icc (Q.a ∘ Fin.succAbove (0 : Fin (n + 1)))
+    (Q.b ∘ Fin.succAbove (0 : Fin (n + 1)))
+
+/-- The boundary-coordinate tail lies in the certified local coordinate domain. -/
+theorem boundaryTail_subset_localCoordDomain (Q : BoundaryLocalizedStokesPiece M ω) :
+    Q.boundaryTail ⊆ Q.P.localCoordDomain :=
+  Q.P.tailBox_subset_localCoordDomain_of_flattening_image_eq Q.a Q.b Q.box_le
+    Q.box_zero_low Q.U_subset_patch Q.flattening_image_eq_box
+
+/-- Patch-local boundary contribution of a certified localized Stokes piece. -/
+def boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω) : ℝ :=
+  Q.P.localBoundaryIntegral (DiffForm.fsmul Q.χ ω) Q.boundaryTail
+    Q.boundaryTail_subset_localCoordDomain
+
+end BoundaryLocalizedStokesPiece
+
+/-- Finite assembly of certified localized boundary-box Stokes pieces.
+
+The theorem proves that the domain integral of `dω` over the compact carrier equals the finite sum
+of the provided patch-local boundary contributions.  It is an assembly theorem for certified local
+data, not a chart-independent boundary integral or the final exported compact-domain Stokes
+statement. -/
+theorem finite_boundary_localized_stokes {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*} (s : Finset ι)
+    (piece : ι → BoundaryLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ ⊤ ω)
+    (hpartition : ∀ y ∈ M.carrier,
+      (fun z => ∑ i ∈ s, (piece i).χ z) =ᶠ[𝓝 y] fun _ => 1) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ s, (piece i).boundaryContribution := by
+  have hsum :
+      (∑ i ∈ s,
+        DiffForm.integral (DiffForm.extd (DiffForm.fsmul (piece i).χ ω)) M.carrier) =
+        DiffForm.integral (DiffForm.extd ω) M.carrier :=
+    DiffForm.finset_sum_integral_extd_fsmul_eq_integral_extd_of_sum_eventuallyEq_one
+      s (fun i => (piece i).χ) ω M.measurableSet_carrier
+      (fun i _ => (piece i).localized_differentiable)
+      (fun i _ => (piece i).localized_extd_integrable)
+      hpartition
+  rw [domainIntegral, ← hsum]
+  apply Finset.sum_congr rfl
+  intro i _
+  let Q := piece i
+  have hrestrict :
+      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
+        DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U :=
+    DiffForm.integral_extd_fsmul_eq_integral_extd_fsmul_of_subset_of_left_eventuallyEq_zero_off
+      Q.χ ω M.measurableSet_carrier Q.U_measurable Q.U_subset_carrier
+      Q.scalar_eventually_zero_off_U_in_carrier
+  have hlocal :
+      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U =
+        Q.boundaryContribution := by
+    have hlocal_raw :=
+      Q.P.integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_model_box_of_disjoint_support_scalar
+        Q.χ ω Q.a Q.b Q.U_measurable Q.U_subset_patch Q.flattening_image_eq_box
+        Q.box_le Q.box_zero_low Q.scalar_smooth hω Q.model_pullback_differentiable
+        Q.model_coord_smooth Q.scalar_support_disjoint_artificial
+    simpa [Q, BoundaryLocalizedStokesPiece.boundaryContribution,
+      BoundaryLocalizedStokesPiece.boundaryTail,
+      BoundaryLocalizedStokesPiece.boundaryTail_subset_localCoordDomain] using hlocal_raw
+  exact hrestrict.trans hlocal
+
+end SmoothDomain
+
+end
