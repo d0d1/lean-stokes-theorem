@@ -13,6 +13,31 @@ M.boundary = {x : Fin d → ℝ | M.φ x = 0}
 
 where `M.φ` is smooth and `fderiv ℝ M.φ x ≠ 0` on the boundary.
 
+## Current status
+
+The theorem layer now contains a box-controlled compact regular sublevel-domain
+Stokes theorem:
+
+```lean
+theorem SmoothDomain.stokes_boundaryIntegral
+    (M : SmoothDomain (n + 1))
+    (ω : DiffForm (n + 1) n)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
+    M.domainIntegral (DiffForm.extd ω) = M.boundaryIntegral ω
+```
+
+`M.boundaryIntegral ω` is currently the chosen box-controlled boundary sum from
+`LeanStokes.Domain.BoxControlledStokes`.  For smooth forms it agrees with every
+subordinate box-controlled boundary sum, as proved by
+`SmoothDomain.boundaryIntegral_eq_boxControlledBoundaryIntegral_of_contDiff`.
+This discharges the local support, cover, partition, and integrability
+hypotheses from the exported box-controlled theorem statement.
+
+This status does not mark the stronger manifold-style integration desiderata
+below as complete: no separate general manifold-with-boundary integration API is
+claimed, and chart-independence outside the box-controlled Euclidean
+construction remains future infrastructure.
+
 ## Intended final theorem schema
 
 The intended exported theorem has the following shape, with names to be fixed by

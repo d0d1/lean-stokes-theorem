@@ -76,6 +76,7 @@ import LeanStokes.Domain.LocalBox
 import LeanStokes.Domain.FiniteLocalization
 import LeanStokes.Domain.BoxControlledCover
 import LeanStokes.Domain.BoxControlledStokes
+import LeanStokes.Domain.Check
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain
 import LeanStokes.SingularCubeStokes.BdryBdry

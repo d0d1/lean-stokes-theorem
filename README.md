@@ -1,28 +1,41 @@
 # LeanStokes
 
 A sorry-free Lean 4/mathlib formalization of Stokes-type theorems for smooth
-singular cubes and axis-aligned boxes in arbitrary finite dimension.
+singular cubes, cubical chains, boxes, and compact regular sublevel domains in
+Euclidean space.
 
 ## Scope
 
-The main theorem is smooth singular cubical Stokes: for a globally smooth map
-`sigma : R^{n+1} -> R^m` and a smooth `n`-form `omega` on `R^m`, the integral
-of the true differential-form pullback of `d omega` over the unit cube equals
-the alternating sum of pullback integrals over the cube faces.
+The repository contains two main theorem layers:
 
-This repository also contains:
+- **Smooth singular cubical Stokes.** For a globally smooth map
+  `sigma : R^{n+1} -> R^m` and a smooth `n`-form `omega` on `R^m`, the integral
+  of the true differential-form pullback of `d omega` over the unit cube equals
+  the alternating sum of pullback integrals over the cube faces.
+- **Box-controlled compact regular sublevel-domain Stokes.** For
+  `M : SmoothDomain (n + 1)` and a smooth `ω : DiffForm (n + 1) n`,
+  `SmoothDomain.stokes_boundaryIntegral` proves
+  `M.domainIntegral (DiffForm.extd ω) = M.boundaryIntegral ω`.
+
+Here `SmoothDomain.boundaryIntegral` is implemented as a fixed chosen
+box-controlled boundary sum assembled from local boundary chart boxes and a
+smooth partition of unity.  For smooth forms, it agrees with every subordinate
+box-controlled boundary sum via
+`SmoothDomain.boundaryIntegral_eq_boxControlledBoundaryIntegral_of_contDiff`.
+This is not a general manifold-with-boundary integration API, and it does not
+claim chart-independence outside the box-controlled Euclidean construction.
+
+The repository also contains:
 
 - box Stokes for coordinate `n`-forms on `R^{n+1}`;
 - a bridge from the coordinate formula to mathlib's abstract `extDeriv`;
+- local half-space and chart-box Stokes infrastructure for regular sublevel
+  domains;
 - true pullback of forms via `fderiv` for singular cubes;
 - singular cubical chains and the linear extension of Stokes;
 - chain-level `partial (partial c) = 0` for singular cubical chains;
 - dimensional specializations including FTC, rectangular Green, divergence
   consistency, 3D Gauss, integration by parts, and Leibniz.
-
-The development does not formalize manifold-with-boundary Stokes, integration of
-forms over manifolds, partition-of-unity arguments, image-domain semantics, or
-boundary orientation for manifolds.
 
 ## Reproducibility
 
@@ -34,12 +47,9 @@ lake build
 lake exe diagnostics
 ```
 
-At the audited state, `lake build` completed successfully with 2659 jobs.
-The Lean artifact contains 44 Lean source modules under `LeanStokes/`, 4028
-source lines, 205 named declarations, and 79 `#print axioms` checks.
-
-The checked declarations depend only on Lean's standard axioms used throughout
-mathlib:
+The checked declarations in `LeanStokes.CubeStokes.Check`,
+`LeanStokes.SingularCubeStokes.Check`, and `LeanStokes.Domain.Check` depend only
+on Lean's standard axioms used throughout mathlib:
 
 - `propext`
 - `Classical.choice`
@@ -47,6 +57,11 @@ mathlib:
 
 ## Main declarations
 
+- `SmoothDomain.stokes_boundaryIntegral`
+- `SmoothDomain.boundaryIntegral`
+- `SmoothDomain.boundaryIntegral_eq_boxControlledBoundaryIntegral_of_contDiff`
+- `SmoothDomain.boxControlledBoundaryIntegral_eq_of_contDiff`
+- `SmoothDomain.exists_boxControlledBoundaryIntegral_stokes`
 - `SingularCubeStokes.singularStokes`
 - `SingularCubeStokes.stokes_singular_boundary`
 - `SingularCubeStokes.stokes_singular_chain`
