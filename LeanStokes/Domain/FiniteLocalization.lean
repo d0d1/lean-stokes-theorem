@@ -89,7 +89,148 @@ def boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω) : ℝ :=
   Q.P.localBoundaryIntegral (DiffForm.fsmul Q.χ ω) Q.boundaryTail
     Q.boundaryTail_subset_localCoordDomain
 
+/-- Carrier integral of a boundary localized piece equals its patch-local boundary contribution. -/
+theorem carrierIntegral_eq_boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ ⊤ ω) :
+    DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
+      Q.boundaryContribution := by
+  have hrestrict :
+      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
+        DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U :=
+    DiffForm.integral_extd_fsmul_eq_integral_extd_fsmul_of_subset_of_left_eventuallyEq_zero_off
+      Q.χ ω M.measurableSet_carrier Q.U_measurable Q.U_subset_carrier
+      Q.scalar_eventually_zero_off_U_in_carrier
+  have hlocal :
+      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U =
+        Q.boundaryContribution := by
+    have hlocal_raw :=
+      Q.P.integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_model_box_of_disjoint_support_scalar
+        Q.χ ω Q.a Q.b Q.U_measurable Q.U_subset_patch Q.flattening_image_eq_box
+        Q.box_le Q.box_zero_low Q.scalar_smooth hω Q.model_pullback_differentiable
+        Q.model_coord_smooth Q.scalar_support_disjoint_artificial
+    simpa [BoundaryLocalizedStokesPiece.boundaryContribution,
+      BoundaryLocalizedStokesPiece.boundaryTail,
+      BoundaryLocalizedStokesPiece.boundaryTail_subset_localCoordDomain] using hlocal_raw
+  exact hrestrict.trans hlocal
+
 end BoundaryLocalizedStokesPiece
+
+/-- A proof-carrying localized Stokes contribution over the carrier.
+
+This is an intermediate certificate layer: it records that one scalar cutoff has a certified
+carrier integral contribution.  It is not a construction of a partition of unity or a global
+boundary integral. -/
+structure LocalizedStokesPiece (M : SmoothDomain (n + 1))
+    (ω : DiffForm (n + 1) n) where
+  /-- Scalar cutoff for this localized piece. -/
+  χ : ℝSpace (n + 1) → ℝ
+  localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
+  localized_extd_integrable :
+    IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
+  /-- Certified contribution of this localized piece. -/
+  contribution : ℝ
+  carrier_integral_eq_contribution :
+    DiffForm.integral (DiffForm.extd (DiffForm.fsmul χ ω)) M.carrier = contribution
+
+namespace BoundaryLocalizedStokesPiece
+
+variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- View a boundary localized Stokes piece as a generic proof-carrying localized contribution. -/
+def toLocalizedStokesPiece (Q : BoundaryLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ ⊤ ω) : LocalizedStokesPiece M ω where
+  χ := Q.χ
+  localized_differentiable := Q.localized_differentiable
+  localized_extd_integrable := Q.localized_extd_integrable
+  contribution := Q.boundaryContribution
+  carrier_integral_eq_contribution := Q.carrierIntegral_eq_boundaryContribution hω
+
+end BoundaryLocalizedStokesPiece
+
+/-- One certified scalar-localized interior box contribution to Stokes.
+
+The contribution of such a piece is zero because its localized form is supported away from every
+formal cubical boundary face of the box. -/
+structure InteriorLocalizedStokesPiece (M : SmoothDomain (n + 1))
+    (ω : DiffForm (n + 1) n) where
+  /-- Scalar cutoff for this localized piece. -/
+  χ : ℝSpace (n + 1) → ℝ
+  /-- Lower corner of the interior model box. -/
+  a : ℝSpace (n + 1)
+  /-- Upper corner of the interior model box. -/
+  b : ℝSpace (n + 1)
+  box_le : a ≤ b
+  box_subset_carrier : Icc a b ⊆ M.carrier
+  scalar_smooth : ContDiff ℝ ⊤ χ
+  localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
+  localized_extd_integrable :
+    IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
+  scalar_support_disjoint_boundary :
+    Disjoint (Function.support χ) (CubeStokes.boxBoundaryFaces a b)
+  scalar_eventually_zero_off_box_in_carrier :
+    ∀ y ∈ M.carrier, y ∉ Icc a b → χ =ᶠ[𝓝 y] fun _ => 0
+
+namespace InteriorLocalizedStokesPiece
+
+variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Carrier integral of an interior localized piece is zero. -/
+theorem carrierIntegral_eq_zero (Q : InteriorLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ ⊤ ω) :
+    DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier = 0 := by
+  have hrestrict :
+      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
+        DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) (Icc Q.a Q.b) :=
+    DiffForm.integral_extd_fsmul_eq_integral_extd_fsmul_of_subset_of_left_eventuallyEq_zero_off
+      Q.χ ω M.measurableSet_carrier measurableSet_Icc Q.box_subset_carrier
+      Q.scalar_eventually_zero_off_box_in_carrier
+  have hχω : ContDiff ℝ ⊤ (DiffForm.fsmul Q.χ ω) :=
+    DiffForm.isSmooth_fsmul Q.scalar_smooth hω
+  have hdisj_form :
+      Disjoint (Function.support (DiffForm.fsmul Q.χ ω))
+        (CubeStokes.boxBoundaryFaces Q.a Q.b) :=
+    DiffForm.disjoint_support_fsmul_of_disjoint_support_left Q.scalar_support_disjoint_boundary
+  have hbox :
+      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) (Icc Q.a Q.b) = 0 :=
+    CubeStokes.boxStokes_eq_zero_of_disjoint_support_boxBoundaryFaces
+      (DiffForm.fsmul Q.χ ω) Q.a Q.b Q.box_le hχω hdisj_form
+  exact hrestrict.trans hbox
+
+/-- View an interior localized Stokes piece as a generic proof-carrying localized contribution. -/
+def toLocalizedStokesPiece (Q : InteriorLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ ⊤ ω) : LocalizedStokesPiece M ω where
+  χ := Q.χ
+  localized_differentiable := Q.localized_differentiable
+  localized_extd_integrable := Q.localized_extd_integrable
+  contribution := 0
+  carrier_integral_eq_contribution := Q.carrierIntegral_eq_zero hω
+
+end InteriorLocalizedStokesPiece
+
+/-- Finite assembly of generic proof-carrying localized Stokes pieces.
+
+Each piece supplies its own certified carrier-integral contribution.  The only global condition is
+that the scalar cutoffs sum to one locally on the carrier. -/
+theorem finite_localized_stokes {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*} (s : Finset ι)
+    (piece : ι → LocalizedStokesPiece M ω)
+    (hpartition : ∀ y ∈ M.carrier,
+      (fun z => ∑ i ∈ s, (piece i).χ z) =ᶠ[𝓝 y] fun _ => 1) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ s, (piece i).contribution := by
+  have hsum :
+      (∑ i ∈ s,
+        DiffForm.integral (DiffForm.extd (DiffForm.fsmul (piece i).χ ω)) M.carrier) =
+        DiffForm.integral (DiffForm.extd ω) M.carrier :=
+    DiffForm.finset_sum_integral_extd_fsmul_eq_integral_extd_of_sum_eventuallyEq_one
+      s (fun i => (piece i).χ) ω M.measurableSet_carrier
+      (fun i _ => (piece i).localized_differentiable)
+      (fun i _ => (piece i).localized_extd_integrable)
+      hpartition
+  rw [domainIntegral, ← hsum]
+  apply Finset.sum_congr rfl
+  intro i _
+  exact (piece i).carrier_integral_eq_contribution
 
 /-- Finite assembly of certified localized boundary-box Stokes pieces.
 
@@ -105,37 +246,9 @@ theorem finite_boundary_localized_stokes {M : SmoothDomain (n + 1)}
       (fun z => ∑ i ∈ s, (piece i).χ z) =ᶠ[𝓝 y] fun _ => 1) :
     M.domainIntegral (DiffForm.extd ω) =
       ∑ i ∈ s, (piece i).boundaryContribution := by
-  have hsum :
-      (∑ i ∈ s,
-        DiffForm.integral (DiffForm.extd (DiffForm.fsmul (piece i).χ ω)) M.carrier) =
-        DiffForm.integral (DiffForm.extd ω) M.carrier :=
-    DiffForm.finset_sum_integral_extd_fsmul_eq_integral_extd_of_sum_eventuallyEq_one
-      s (fun i => (piece i).χ) ω M.measurableSet_carrier
-      (fun i _ => (piece i).localized_differentiable)
-      (fun i _ => (piece i).localized_extd_integrable)
-      hpartition
-  rw [domainIntegral, ← hsum]
-  apply Finset.sum_congr rfl
-  intro i _
-  let Q := piece i
-  have hrestrict :
-      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
-        DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U :=
-    DiffForm.integral_extd_fsmul_eq_integral_extd_fsmul_of_subset_of_left_eventuallyEq_zero_off
-      Q.χ ω M.measurableSet_carrier Q.U_measurable Q.U_subset_carrier
-      Q.scalar_eventually_zero_off_U_in_carrier
-  have hlocal :
-      DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U =
-        Q.boundaryContribution := by
-    have hlocal_raw :=
-      Q.P.integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_model_box_of_disjoint_support_scalar
-        Q.χ ω Q.a Q.b Q.U_measurable Q.U_subset_patch Q.flattening_image_eq_box
-        Q.box_le Q.box_zero_low Q.scalar_smooth hω Q.model_pullback_differentiable
-        Q.model_coord_smooth Q.scalar_support_disjoint_artificial
-    simpa [Q, BoundaryLocalizedStokesPiece.boundaryContribution,
-      BoundaryLocalizedStokesPiece.boundaryTail,
-      BoundaryLocalizedStokesPiece.boundaryTail_subset_localCoordDomain] using hlocal_raw
-  exact hrestrict.trans hlocal
+  simpa [BoundaryLocalizedStokesPiece.toLocalizedStokesPiece] using
+    finite_localized_stokes s
+      (fun i => (piece i).toLocalizedStokesPiece hω) hpartition
 
 end SmoothDomain
 
