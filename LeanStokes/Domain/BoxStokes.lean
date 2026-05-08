@@ -195,6 +195,147 @@ theorem vanishesOnBoxArtificialFaces_of_disjoint_support_boxArtificialFaces
   by_contra hne
   exact (Set.disjoint_left.mp hdisj) hne hx
 
+/-- Point-set swept out by all cubical boundary faces of a box.
+
+This is the formal union of the high and low face parametrizations used by `bdryIntegral`; it is
+not a separate theorem identifying the topological frontier for arbitrary corners `a b`. -/
+def boxBoundaryFaces (a b : ℝSpace (n + 1)) : Set (ℝSpace (n + 1)) :=
+  ⋃ i : Fin (n + 1),
+    ({x | ∃ y ∈ Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+        x = Fin.insertNth i (b i) y} ∪
+     {x | ∃ y ∈ Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+        x = Fin.insertNth i (a i) y})
+
+theorem mem_boxBoundaryFaces_high (a b : ℝSpace (n + 1)) (i : Fin (n + 1))
+    {y : ℝSpace n} (hy : y ∈ Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i)) :
+    Fin.insertNth i (b i) y ∈ boxBoundaryFaces a b := by
+  unfold boxBoundaryFaces
+  exact Set.mem_iUnion.mpr ⟨i, Or.inl ⟨y, hy, rfl⟩⟩
+
+theorem mem_boxBoundaryFaces_low (a b : ℝSpace (n + 1)) (i : Fin (n + 1))
+    {y : ℝSpace n} (hy : y ∈ Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i)) :
+    Fin.insertNth i (a i) y ∈ boxBoundaryFaces a b := by
+  unfold boxBoundaryFaces
+  exact Set.mem_iUnion.mpr ⟨i, Or.inr ⟨y, hy, rfl⟩⟩
+
+/-- Algebraic vanishing of every high and low face term in the cubical boundary integral. -/
+def VanishesOnBoxBoundaryFaces (ω : DiffForm (n + 1) n)
+    (a b : ℝSpace (n + 1)) : Prop :=
+  ∀ i : Fin (n + 1),
+    (∀ y ∈ Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+      CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i
+        (Fin.insertNth i (b i) y) = 0) ∧
+    (∀ y ∈ Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+      CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i
+        (Fin.insertNth i (a i) y) = 0)
+
+/-- Pointwise zero of a form on every cubical boundary face point-set implies algebraic face
+integrand vanishing. -/
+theorem vanishesOnBoxBoundaryFaces_of_eq_zero_on_boxBoundaryFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hzero : ∀ x ∈ boxBoundaryFaces a b, ω x = 0) :
+    VanishesOnBoxBoundaryFaces ω a b := by
+  intro i
+  constructor
+  · intro y hy
+    have hωzero : ω (Fin.insertNth i (b i) y) = 0 :=
+      hzero _ (mem_boxBoundaryFaces_high a b i hy)
+    rw [CubeStokes.signedCoeff, CubeStokes.toCoordNForm, hωzero]
+    simp
+  · intro y hy
+    have hωzero : ω (Fin.insertNth i (a i) y) = 0 :=
+      hzero _ (mem_boxBoundaryFaces_low a b i hy)
+    rw [CubeStokes.signedCoeff, CubeStokes.toCoordNForm, hωzero]
+    simp
+
+/-- Disjointness of form support from the formal cubical boundary faces implies algebraic face
+integrand vanishing. -/
+theorem vanishesOnBoxBoundaryFaces_of_disjoint_support_boxBoundaryFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hdisj : Disjoint (Function.support ω) (boxBoundaryFaces a b)) :
+    VanishesOnBoxBoundaryFaces ω a b := by
+  apply vanishesOnBoxBoundaryFaces_of_eq_zero_on_boxBoundaryFaces ω a b
+  intro x hx
+  by_contra hne
+  exact (Set.disjoint_left.mp hdisj) hne hx
+
+/-- If every cubical boundary face integrand vanishes, the cubical boundary integral is zero. -/
+theorem bdryIntegral_eq_zero_of_vanishesOnBoxBoundaryFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hvanish : VanishesOnBoxBoundaryFaces ω a b) :
+    CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b = 0 := by
+  unfold CubeStokes.bdryIntegral
+  apply Finset.sum_eq_zero
+  intro i _
+  rcases hvanish i with ⟨hhi, hlo⟩
+  have hhigh :
+      (∫ x in Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+        CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i
+          (Fin.insertNth i (b i) x)) = 0 := by
+    rw [show
+        (∫ x in Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+          CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i
+            (Fin.insertNth i (b i) x)) =
+          ∫ x in Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i), (0 : ℝ) from
+        MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+          (fun x hx => hhi x hx)]
+    simp
+  have hlow :
+      (∫ x in Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+        CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i
+          (Fin.insertNth i (a i) x)) = 0 := by
+    rw [show
+        (∫ x in Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i),
+          CubeStokes.signedCoeff (CubeStokes.toCoordNForm ω) i
+            (Fin.insertNth i (a i) x)) =
+          ∫ x in Icc (a ∘ Fin.succAbove i) (b ∘ Fin.succAbove i), (0 : ℝ) from
+        MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+          (fun x hx => hlo x hx)]
+    simp
+  rw [hhigh, hlow, sub_self]
+
+/-- Full-box Stokes with zero boundary contribution, assuming algebraic vanishing of every
+boundary face term. -/
+theorem boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces_of_differentiable
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b)
+    (hω_diff : Differentiable ℝ ω)
+    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm ω))
+    (hvanish : VanishesOnBoxBoundaryFaces ω a b) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 := by
+  rw [CubeStokes.boxStokes_diffForm_of_differentiable ω a b hle hω_diff hcoord,
+    CubeStokes.bdryIntegral_eq_zero_of_vanishesOnBoxBoundaryFaces ω a b hvanish]
+
+/-- Full-box Stokes with zero boundary contribution, assuming smoothness and algebraic vanishing of
+every boundary face term. -/
+theorem boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (hω : ContDiff ℝ ⊤ ω)
+    (hvanish : VanishesOnBoxBoundaryFaces ω a b) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 :=
+  boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces_of_differentiable ω a b hle
+    (hω.differentiable (by simp)) (CubeStokes.toCoordNForm_smooth ω hω) hvanish
+
+/-- Full-box Stokes with zero boundary contribution when the form is pointwise zero on every
+formal cubical boundary face. -/
+theorem boxStokes_eq_zero_of_eq_zero_on_boxBoundaryFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (hω : ContDiff ℝ ⊤ ω)
+    (hzero : ∀ x ∈ boxBoundaryFaces a b, ω x = 0) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 :=
+  boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces ω a b hle hω
+    (vanishesOnBoxBoundaryFaces_of_eq_zero_on_boxBoundaryFaces ω a b hzero)
+
+/-- Full-box Stokes with zero boundary contribution when the form support is disjoint from every
+formal cubical boundary face. -/
+theorem boxStokes_eq_zero_of_disjoint_support_boxBoundaryFaces
+    (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (hω : ContDiff ℝ ⊤ ω)
+    (hdisj : Disjoint (Function.support ω) (boxBoundaryFaces a b)) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 :=
+  boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces ω a b hle hω
+    (vanishesOnBoxBoundaryFaces_of_disjoint_support_boxBoundaryFaces ω a b hdisj)
+
 /-- If every artificial box face vanishes pointwise, the cubical boundary integral is exactly the
 standard half-space boundary integral on the true lower `x₀ = 0` face. -/
 theorem bdryIntegral_eq_halfSpaceBoundaryIntegral_of_vanishesOnArtificialFaces
