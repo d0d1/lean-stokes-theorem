@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.CubeStokes.Unified
+import LeanStokes.CubeStokes.Smooth
 import LeanStokes.CubeStokes.Classical
 import LeanStokes.CubeStokes.FTC
 import LeanStokes.CubeStokes.Chains
@@ -33,6 +34,7 @@ This file serves as a complete audit of the formalization's logical foundations.
 section CoreTheorems
 -- Core Stokes theorem
 #print axioms CubeStokes.stokes_on_box
+#print axioms CubeStokes.stokes_contDiffAt_box
 #print axioms CubeStokes.stokes_smooth
 end CoreTheorems
 
