@@ -75,9 +75,9 @@ theorem extd_finset_sum {ι : Type*} (s : Finset ι) (ω : ι → DiffForm d n)
   | insert a s ha ih =>
       have ha_diff : DifferentiableAt ℝ (ω a) x := hω a (by simp)
       have hs_diff : DifferentiableAt ℝ (∑ i ∈ s, ω i) x :=
-        DifferentiableAt.sum (fun i hi => hω i (by simp [hi, ha]))
+        DifferentiableAt.sum (fun i hi => hω i (by simp [hi]))
       have hrest : extd (∑ i ∈ s, ω i) x = ∑ i ∈ s, extd (ω i) x :=
-        ih (fun i hi => hω i (by simp [hi, ha]))
+        ih (fun i hi => hω i (by simp [hi]))
       rw [Finset.sum_insert ha, extd_add (ω a) (∑ i ∈ s, ω i) ha_diff hs_diff,
         hrest, Finset.sum_insert ha]
 

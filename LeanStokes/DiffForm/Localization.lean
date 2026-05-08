@@ -98,6 +98,14 @@ theorem fsmul_eq_zero_of_left_eq_zero {f : ℝSpace d → ℝ} {ω : DiffForm d 
     fsmul f ω x = 0 := by
   simp [fsmul, hf]
 
+/-- If the scalar factor is locally zero, then the localized form is locally zero. -/
+theorem fsmul_eventuallyEq_zero_of_left_eventuallyEq_zero
+    {f : ℝSpace d → ℝ} {ω : DiffForm d n} {x : ℝSpace d}
+    (hf : f =ᶠ[𝓝 x] fun _ => 0) :
+    fsmul f ω =ᶠ[𝓝 x] (0 : DiffForm d n) := by
+  filter_upwards [hf] with y hy
+  exact fsmul_eq_zero_of_left_eq_zero (ω := ω) hy
+
 /-- The support of a scalar-localized form is contained in the support of the scalar factor. -/
 theorem support_fsmul_subset_left (f : ℝSpace d → ℝ) (ω : DiffForm d n) :
     Function.support (fsmul f ω) ⊆ Function.support f := by

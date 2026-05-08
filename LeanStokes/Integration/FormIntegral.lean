@@ -87,6 +87,37 @@ theorem integral_congr (ω₁ ω₂ : DiffForm d d) {S : Set (ℝSpace d)}
   intro x hx
   simp [topCoeff, h x hx]
 
+/-- If a top form has zero top coefficient on `S \ T` and `T ⊆ S`, then its integral over `S`
+equals its integral over `T`.  This is a set-integral restriction lemma and does not require a
+separate integrability hypothesis. -/
+theorem integral_eq_integral_of_subset_of_topCoeff_eq_zero_on_diff
+    (ω : DiffForm d d) {S T : Set (ℝSpace d)}
+    (hS : MeasurableSet S) (hT : MeasurableSet T) (hsub : T ⊆ S)
+    (hzero : ∀ x ∈ S, x ∉ T → topCoeff ω x = 0) :
+    integral ω S = integral ω T := by
+  unfold integral
+  rw [← MeasureTheory.integral_indicator hS, ← MeasureTheory.integral_indicator hT]
+  apply MeasureTheory.integral_congr_ae
+  exact Filter.Eventually.of_forall fun x => by
+    by_cases hxT : x ∈ T
+    · have hxS : x ∈ S := hsub hxT
+      simp [indicator_of_mem hxS, indicator_of_mem hxT]
+    · by_cases hxS : x ∈ S
+      · have hz := hzero x hxS hxT
+        rw [indicator_of_mem hxS, indicator_of_notMem hxT]
+        simpa [topCoeff] using hz
+      · simp [indicator_of_notMem hxS, indicator_of_notMem hxT]
+
+/-- If a top form is zero on `S \ T` and `T ⊆ S`, then its integral over `S` equals its integral
+over `T`. -/
+theorem integral_eq_integral_of_subset_of_eq_zero_on_diff
+    (ω : DiffForm d d) {S T : Set (ℝSpace d)}
+    (hS : MeasurableSet S) (hT : MeasurableSet T) (hsub : T ⊆ S)
+    (hzero : ∀ x ∈ S, x ∉ T → ω x = 0) :
+    integral ω S = integral ω T :=
+  integral_eq_integral_of_subset_of_topCoeff_eq_zero_on_diff ω hS hT hsub
+    (fun x hxS hxT => by simp [topCoeff, hzero x hxS hxT])
+
 /-- Integration is linear: ∫(ω₁ + ω₂) = ∫ω₁ + ∫ω₂. -/
 theorem integral_add (ω₁ ω₂ : DiffForm d d) (S : Set (ℝSpace d))
     (h₁ : IntegrableOn (topCoeff ω₁) S volume)
