@@ -39,9 +39,28 @@ theorem contDiff_multilinearMap_apply_of_contDiff (N : ℕ)
         p.1 p.2) := by
     rw [← contDiffOn_univ]
     exact ((ContinuousLinearMap.id 𝕜
+       (ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G)
+       ).cpolynomialOn_uncurry_of_multilinear (s := Set.univ)).contDiffOn
+  exact happ.comp (hf.prodMk (contDiff_pi' hg))
+
+/-- Local version of `contDiff_multilinearMap_apply_of_contDiff`.
+
+The hypotheses are ambient `ContDiffAt` assumptions at the point, not relative
+smoothness within a set. -/
+theorem contDiffAt_multilinearMap_apply_of_contDiffAt (N : ℕ)
+    (f : E → ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G)
+    (g : Fin N → E → F) {x : E}
+    (hf : ContDiffAt 𝕜 (⊤ : ℕ∞) f x)
+    (hg : ∀ k, ContDiffAt 𝕜 (⊤ : ℕ∞) (g k) x) :
+    ContDiffAt 𝕜 (⊤ : ℕ∞) (fun x => (f x) (fun k => g k x)) x := by
+  have happ : ContDiff 𝕜 (⊤ : ℕ∞)
+      (fun p : ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G × (Fin N → F) =>
+        p.1 p.2) := by
+    rw [← contDiffOn_univ]
+    exact ((ContinuousLinearMap.id 𝕜
       (ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G)
       ).cpolynomialOn_uncurry_of_multilinear (s := Set.univ)).contDiffOn
-  exact happ.comp (hf.prodMk (contDiff_pi' hg))
+  exact happ.contDiffAt.comp x (hf.prodMk (contDiffAt_pi.mpr hg))
 
 end DiffForm
 

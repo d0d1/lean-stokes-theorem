@@ -50,6 +50,33 @@ theorem boxStokes_diffForm_of_differentiable (ω : DiffForm (n + 1) n)
   simpa [DiffForm.integral, DiffForm.topCoeff, DiffForm.extd, DiffForm.stdBasis] using
     CubeStokes.stokes_extDeriv ω a b hle hω_diff hcoord
 
+/-- Box Stokes for a form that is ambient-smooth at every point of the closed box.
+
+This is a local regularity wrapper: it uses only pointwise ambient `ContDiffAt`
+on `Icc a b`, not global differentiability or global coefficient smoothness. -/
+theorem boxStokes_diffForm_of_contDiffAt_box (ω : DiffForm (n + 1) n)
+    (a b : ℝSpace (n + 1)) (hle : a ≤ b)
+    (hω : ∀ x ∈ Icc a b, ContDiffAt ℝ (⊤ : ℕ∞) ω x) :
+    DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+      CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b := by
+  have hbox :
+      CubeStokes.boxIntegral (CubeStokes.extDerivCoord (CubeStokes.toCoordNForm ω)) a b =
+        CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b := by
+    apply CubeStokes.stokes_contDiffAt_box a b hle
+    intro i x hx
+    exact CubeStokes.toCoordNForm_contDiffAt ω (hω x hx) i
+  have hbulk :
+      DiffForm.integral (DiffForm.extd ω) (Icc a b) =
+        CubeStokes.boxIntegral (CubeStokes.extDerivCoord (CubeStokes.toCoordNForm ω)) a b := by
+    unfold DiffForm.integral CubeStokes.boxIntegral
+    apply MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+    intro x hx
+    simpa [DiffForm.topCoeff, DiffForm.extd] using
+      CubeStokes.extDeriv_topCoeff_eq_extDerivCoord ω x
+        ((hω x hx).differentiableAt (by simp))
+  rw [hbulk]
+  exact hbox
+
 /-- Box Stokes with the bulk side expressed as `DiffForm.integral (DiffForm.extd ω)`.
 
 The boundary side is still the existing cubical coordinate-boundary integral; later local-domain

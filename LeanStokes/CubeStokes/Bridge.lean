@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.CubeStokes.Defs
+import Mathlib.Analysis.Calculus.ContDiff.Comp
 import Mathlib.Analysis.Calculus.DifferentialForm.Basic
 import Mathlib.Analysis.Calculus.DifferentialForm.VectorField
 
@@ -69,11 +70,24 @@ theorem toCoordNForm_smooth
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     IsSmooth (toCoordNForm ω) := by
   intro i
-  show ContDiff ℝ (⊤ : ℕ∞) (fun x => (ω x) (fun k => Pi.single (Fin.succAbove i k) 1))
   change ContDiff ℝ (⊤ : ℕ∞) ((ContinuousAlternatingMap.apply ℝ (Fin (n + 1) → ℝ) ℝ
     (fun k => Pi.single (Fin.succAbove i k) 1)) ∘ ω)
   exact (ContinuousAlternatingMap.apply ℝ (Fin (n + 1) → ℝ) ℝ
     (fun k => Pi.single (Fin.succAbove i k) 1)).contDiff.comp hω
+
+/-- Local coefficient regularity for `toCoordNForm`.
+
+The hypothesis is ambient `ContDiffAt` at `x`; it is not a relative smoothness
+statement on a subset. -/
+theorem toCoordNForm_contDiffAt
+    (ω : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
+    {x : Fin (n + 1) → ℝ}
+    (hω : ContDiffAt ℝ (⊤ : ℕ∞) ω x) (i : Fin (n + 1)) :
+    ContDiffAt ℝ (⊤ : ℕ∞) ((toCoordNForm ω) i) x := by
+  change ContDiffAt ℝ (⊤ : ℕ∞) ((ContinuousAlternatingMap.apply ℝ
+    (Fin (n + 1) → ℝ) ℝ (fun k => Pi.single (Fin.succAbove i k) 1)) ∘ ω) x
+  exact (ContinuousAlternatingMap.apply ℝ (Fin (n + 1) → ℝ) ℝ
+    (fun k => Pi.single (Fin.succAbove i k) 1)).contDiff.contDiffAt.comp x hω
 
 end CubeStokes
 
