@@ -65,7 +65,8 @@ theorem ambientBoundaryInteriorCover_inner_none :
     M.ambientCoverWithComplement M.boundaryInteriorCover (some none) = M.int :=
   rfl
 
-/-- In the complement-extended ambient cover, `some (some x)` is the chosen boundary patch at `x`. -/
+/-- In the complement-extended ambient cover, `some (some x)` is the chosen boundary patch at
+`x`. -/
 @[simp]
 theorem ambientBoundaryInteriorCover_inner_some (x : M.boundary) :
     M.ambientCoverWithComplement M.boundaryInteriorCover (some (some x)) =

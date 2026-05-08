@@ -21,6 +21,46 @@ noncomputable section
 open Set
 open scoped BigOperators Topology Manifold
 
+/-- If the topological support of a function is contained in `U`, then the function is eventually
+zero near any point outside `U`. -/
+theorem eventuallyEq_zero_of_tsupport_subset_of_notMem
+    {X α : Type*} [TopologicalSpace X] [Zero α]
+    {f : X → α} {U : Set X} {x : X}
+    (hsub : tsupport f ⊆ U) (hx : x ∉ U) :
+    f =ᶠ[𝓝 x] fun _ => 0 :=
+  notMem_tsupport_iff_eventuallyEq.mp (fun hxt => hx (hsub hxt))
+
+/-- If the topological support of a function lies in a set disjoint from `S`, then the raw support
+is disjoint from `S`. -/
+theorem disjoint_support_left_of_tsupport_subset
+    {X α : Type*} [TopologicalSpace X] [Zero α]
+    {f : X → α} {U S : Set X}
+    (hsub : tsupport f ⊆ U) (hdisj : Disjoint U S) :
+    Disjoint (Function.support f) S :=
+  hdisj.mono_left ((subset_tsupport f).trans hsub)
+
+namespace SmoothPartitionOfUnity
+
+variable {ι E H M : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+  [TopologicalSpace H] {I : ModelWithCorners ℝ E H} [TopologicalSpace M]
+  [ChartedSpace H M] {s : Set M} {U : ι → Set M}
+  {ρ : SmoothPartitionOfUnity ι I M s}
+
+/-- A partition element subordinate to `U i` is eventually zero near points outside `U i`. -/
+theorem IsSubordinate.eventuallyEq_zero_of_notMem
+    (hρU : ρ.IsSubordinate U) {i : ι} {x : M} (hx : x ∉ U i) :
+    (fun z => ρ i z) =ᶠ[𝓝 x] fun _ => 0 :=
+  eventuallyEq_zero_of_tsupport_subset_of_notMem (f := fun z => ρ i z) (hρU i) hx
+
+/-- A partition element subordinate to `U i` has raw support disjoint from any set disjoint from
+`U i`. -/
+theorem IsSubordinate.disjoint_support
+    (hρU : ρ.IsSubordinate U) {i : ι} {S : Set M} (hdisj : Disjoint (U i) S) :
+    Disjoint (Function.support (fun z => ρ i z)) S :=
+  disjoint_support_left_of_tsupport_subset (f := fun z => ρ i z) (hρU i) hdisj
+
+end SmoothPartitionOfUnity
+
 namespace SmoothDomain
 
 variable {d : ℕ}
