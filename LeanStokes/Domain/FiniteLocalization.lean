@@ -57,14 +57,6 @@ structure BoundaryLocalizedStokesPiece (M : SmoothDomain (n + 1))
   localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
   localized_extd_integrable :
     IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
-  model_pullback_differentiable :
-    Differentiable ℝ
-      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm
-        (DiffForm.fsmul χ ω))
-  model_coord_smooth :
-    CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm
-        (DiffForm.fsmul χ ω)))
   scalar_support_disjoint_artificial :
     Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart P.i x P.h).symm))
       (CubeStokes.boxArtificialFaces a b)
@@ -95,14 +87,6 @@ def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
     (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
     (localized_extd_integrable :
       IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
-    (model_pullback_differentiable :
-      Differentiable ℝ
-        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
-          (DiffForm.fsmul χ ω)))
-    (model_coord_smooth :
-      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
-          (DiffForm.fsmul χ ω))))
     (scalar_support_disjoint_artificial :
       Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
         (CubeStokes.boxArtificialFaces G.a G.b))
@@ -124,17 +108,14 @@ def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
   scalar_smooth := scalar_smooth
   localized_differentiable := localized_differentiable
   localized_extd_integrable := localized_extd_integrable
-  model_pullback_differentiable := model_pullback_differentiable
-  model_coord_smooth := model_coord_smooth
   scalar_support_disjoint_artificial := scalar_support_disjoint_artificial
   scalar_eventually_zero_off_U_in_carrier := scalar_eventually_zero_off_U_in_carrier
 
 /-- Build a localized boundary piece from chart-box geometry and a smooth partition cutoff whose
 topological support lies in the chart-box set.
 
-This derives only scalar smoothness, localized differentiability, and off-box eventual-zero fields;
-model-pullback regularity, integrability, and artificial-face support disjointness remain explicit
-hypotheses. -/
+This derives scalar smoothness, localized differentiability, and off-box eventual-zero fields;
+integrability and artificial-face support disjointness remain explicit hypotheses. -/
 def ofChartBoxSmoothPartitionOfTSupportSubset {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
     (i : ι) (G : BoundaryChartBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
@@ -143,14 +124,6 @@ def ofChartBoxSmoothPartitionOfTSupportSubset {ι : Type*} {s : Set (ℝSpace (n
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
         M.carrier volume)
-    (model_pullback_differentiable :
-      Differentiable ℝ
-        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
-          (DiffForm.fsmul (fun z => ρ i z) ω)))
-    (model_coord_smooth :
-      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
-          (DiffForm.fsmul (fun z => ρ i z) ω))))
     (scalar_support_disjoint_artificial :
       Disjoint
         (Function.support ((fun z => ρ i z) ∘
@@ -161,8 +134,6 @@ def ofChartBoxSmoothPartitionOfTSupportSubset {ι : Type*} {s : Set (ℝSpace (n
     (ρ.contDiff_apply_infty i)
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
     localized_extd_integrable
-    model_pullback_differentiable
-    model_coord_smooth
     scalar_support_disjoint_artificial
     (fun y _ hyU =>
       eventuallyEq_zero_of_tsupport_subset_of_notMem (f := fun z => ρ i z) htsupport hyU)
@@ -180,14 +151,6 @@ def ofChartBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
         M.carrier volume)
-    (model_pullback_differentiable :
-      Differentiable ℝ
-        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
-          (DiffForm.fsmul (fun z => ρ i z) ω)))
-    (model_coord_smooth :
-      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
-          (DiffForm.fsmul (fun z => ρ i z) ω))))
     (scalar_support_disjoint_artificial :
       Disjoint
         (Function.support ((fun z => ρ i z) ∘
@@ -197,8 +160,6 @@ def ofChartBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
   ofChartBoxSmoothPartitionOfTSupportSubset ρ i G hω
     (by simpa using (hρU i).trans hUsub)
     localized_extd_integrable
-    model_pullback_differentiable
-    model_coord_smooth
     scalar_support_disjoint_artificial
 
 /-- Boundary-coordinate tail of the model half-space box for a localized piece. -/

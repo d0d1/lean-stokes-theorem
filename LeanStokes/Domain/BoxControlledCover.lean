@@ -399,8 +399,8 @@ theorem support_comp_disjoint_artificial (C : BoundaryBoxCoverMember M)
 boundary box-controlled cover member.
 
 Only scalar smoothness, localized differentiability, eventual-zero support control, and model
-artificial-face support control are derived here.  Integrability and model-coordinate regularity
-remain explicit analytic hypotheses. -/
+artificial-face support control are derived here.  Integrability remains an explicit analytic
+hypothesis. -/
 def toBoundaryLocalizedStokesPieceOfSmoothPartition
     {ι : Type*} {s : Set (ℝSpace (n + 1))}
     (C : BoundaryBoxCoverMember M)
@@ -410,22 +410,12 @@ def toBoundaryLocalizedStokesPieceOfSmoothPartition
     (localized_extd_integrable :
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
-        M.carrier volume)
-    (model_pullback_differentiable :
-      Differentiable ℝ
-        (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-          (DiffForm.fsmul (fun z => ρ i z) ω)))
-    (model_coord_smooth :
-      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-        (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-          (DiffForm.fsmul (fun z => ρ i z) ω)))) :
+        M.carrier volume) :
     BoundaryLocalizedStokesPiece M ω :=
   BoundaryLocalizedStokesPiece.ofChartBox C.G (fun z => ρ i z)
     (ρ.contDiff_apply_infty i)
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
     localized_extd_integrable
-    model_pullback_differentiable
-    model_coord_smooth
     (C.support_comp_disjoint_artificial hχV)
     (C.eventuallyEq_zero_off_U_in_carrier hχV)
 
@@ -669,18 +659,6 @@ noncomputable def activeBoxControlledContributionCertificate
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
         M.carrier volume)
-    (boundary_model_pullback_differentiable :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        Differentiable ℝ
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-    (boundary_model_coord_smooth :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω))))
     (j : { i // i ∈ M.compactActiveFinset ρ }) :
     { r : ℝ //
       DiffForm.integral (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω))
@@ -697,12 +675,8 @@ noncomputable def activeBoxControlledContributionCertificate
   | boundary C =>
       have hχV : tsupport (fun z => ρ j.1 z) ⊆ C.V := by
         simpa [hI, boxControlledCarrierCover] using hspec.2
-      have hjEq : j.1 = some (BoxControlledCoverIndex.boundary C) := by
-        simpa [hI] using hspec.1
       let Q := C.toBoundaryLocalizedStokesPieceOfSmoothPartition ρ j.1 hω hχV
         (localized_extd_integrable j)
-        (boundary_model_pullback_differentiable j C hjEq)
-        (boundary_model_coord_smooth j C hjEq)
       have hQ := (Q.toLocalizedStokesPiece hω).carrier_integral_eq_contribution
       exact ⟨Q.boundaryContribution, by simpa [Q] using hQ⟩
 
@@ -717,21 +691,8 @@ noncomputable def activeBoxControlledContribution
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
         M.carrier volume)
-    (boundary_model_pullback_differentiable :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        Differentiable ℝ
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-    (boundary_model_coord_smooth :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω))))
     (j : { i // i ∈ M.compactActiveFinset ρ }) : ℝ :=
-  (activeBoxControlledContributionCertificate ρ hρ hω localized_extd_integrable
-    boundary_model_pullback_differentiable boundary_model_coord_smooth j).1
+  (activeBoxControlledContributionCertificate ρ hρ hω localized_extd_integrable j).1
 
 /-- Localized Stokes piece carried by one active box-controlled partition element. -/
 noncomputable def activeBoxControlledLocalizedPiece
@@ -744,28 +705,15 @@ noncomputable def activeBoxControlledLocalizedPiece
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
         M.carrier volume)
-    (boundary_model_pullback_differentiable :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        Differentiable ℝ
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-    (boundary_model_coord_smooth :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω))))
     (j : { i // i ∈ M.compactActiveFinset ρ }) : LocalizedStokesPiece M ω where
   χ := fun z => ρ j.1 z
   localized_differentiable :=
     ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty j.1) hω).differentiable (by simp))
   localized_extd_integrable := localized_extd_integrable j
   contribution := activeBoxControlledContribution ρ hρ hω localized_extd_integrable
-    boundary_model_pullback_differentiable boundary_model_coord_smooth j
+    j
   carrier_integral_eq_contribution :=
-    (activeBoxControlledContributionCertificate ρ hρ hω localized_extd_integrable
-      boundary_model_pullback_differentiable boundary_model_coord_smooth j).2
+    (activeBoxControlledContributionCertificate ρ hρ hω localized_extd_integrable j).2
 
 @[simp]
 theorem activeBoxControlledLocalizedPiece_chi
@@ -778,21 +726,8 @@ theorem activeBoxControlledLocalizedPiece_chi
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
         M.carrier volume)
-    (boundary_model_pullback_differentiable :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        Differentiable ℝ
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-    (boundary_model_coord_smooth :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω))))
     (j : { i // i ∈ M.compactActiveFinset ρ }) :
-    (activeBoxControlledLocalizedPiece ρ hρ hω localized_extd_integrable
-      boundary_model_pullback_differentiable boundary_model_coord_smooth j).χ =
+    (activeBoxControlledLocalizedPiece ρ hρ hω localized_extd_integrable j).χ =
       fun z => ρ j.1 z :=
   rfl
 
@@ -807,29 +742,15 @@ theorem finite_boxControlled_localized_stokes_of_smoothPartition
     (localized_extd_integrable : ∀ j : { i // i ∈ M.compactActiveFinset ρ },
       IntegrableOn
         (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-        M.carrier volume)
-    (boundary_model_pullback_differentiable :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        Differentiable ℝ
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω)))
-    (boundary_model_coord_smooth :
-      ∀ (j : { i // i ∈ M.compactActiveFinset ρ }) (C : BoundaryBoxCoverMember M),
-        j.1 = some (BoxControlledCoverIndex.boundary C) →
-        CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-          (DiffForm.pullback (M.halfSpaceFlatteningChart C.G.P.i C.G.x C.G.P.h).symm
-            (DiffForm.fsmul (fun z => ρ j.1 z) ω)))) :
+        M.carrier volume) :
     M.domainIntegral (DiffForm.extd ω) =
       ∑ j ∈ (M.compactActiveFinset ρ).attach,
-        activeBoxControlledContribution ρ hρ hω localized_extd_integrable
-          boundary_model_pullback_differentiable boundary_model_coord_smooth j := by
+        activeBoxControlledContribution ρ hρ hω localized_extd_integrable j := by
   simpa [activeBoxControlledLocalizedPiece, activeBoxControlledContribution] using
     finite_localized_stokes_of_smoothPartition_on_active ρ
-      (activeBoxControlledLocalizedPiece ρ hρ hω localized_extd_integrable
-        boundary_model_pullback_differentiable boundary_model_coord_smooth)
+      (activeBoxControlledLocalizedPiece ρ hρ hω localized_extd_integrable)
       (fun j => activeBoxControlledLocalizedPiece_chi ρ hρ hω localized_extd_integrable
-        boundary_model_pullback_differentiable boundary_model_coord_smooth j)
+        j)
 
 end SmoothDomain
 
