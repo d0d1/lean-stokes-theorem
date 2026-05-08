@@ -28,6 +28,21 @@ namespace SmoothDomain
 
 variable {n : ℕ}
 
+namespace BoundaryChartBox
+
+variable {M : SmoothDomain (n + 1)}
+
+/-- Patch-local boundary contribution associated to pure boundary chart-box geometry and a scalar
+localized ambient form.
+
+This is still chart-box-local data, not a chart-independent boundary integral. -/
+def boundaryContribution (G : BoundaryChartBox M)
+    (χ : ℝSpace (n + 1) → ℝ) (ω : DiffForm (n + 1) n) : ℝ :=
+  G.P.localBoundaryIntegral (DiffForm.fsmul χ ω) G.boundaryTail
+    G.boundaryTail_subset_localCoordDomain
+
+end BoundaryChartBox
+
 /-- One certified scalar-localized boundary patch contribution to Stokes.
 
 The fields are deliberately explicit: this structure records the hypotheses
@@ -106,6 +121,19 @@ def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
   scalar_support_disjoint_artificial := scalar_support_disjoint_artificial
   scalar_eventually_zero_off_U_in_carrier := scalar_eventually_zero_off_U_in_carrier
 
+@[simp]
+theorem chartBox_ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
+    (scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
+    (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
+    (scalar_support_disjoint_artificial :
+      Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
+        (CubeStokes.boxArtificialFaces G.a G.b))
+    (scalar_eventually_zero_off_U_in_carrier :
+      ∀ y ∈ M.carrier, y ∉ G.U → χ =ᶠ[𝓝 y] fun _ => 0) :
+    (ofChartBox G χ scalar_smooth localized_differentiable
+      scalar_support_disjoint_artificial scalar_eventually_zero_off_U_in_carrier).chartBox = G :=
+  rfl
+
 /-- Build a localized boundary piece from chart-box geometry and a smooth partition cutoff whose
 topological support lies in the chart-box set.
 
@@ -160,8 +188,23 @@ theorem boundaryTail_subset_localCoordDomain (Q : BoundaryLocalizedStokesPiece M
 
 /-- Patch-local boundary contribution of a certified localized Stokes piece. -/
 def boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω) : ℝ :=
-  Q.P.localBoundaryIntegral (DiffForm.fsmul Q.χ ω) Q.boundaryTail
-    Q.boundaryTail_subset_localCoordDomain
+  Q.chartBox.boundaryContribution Q.χ ω
+
+@[simp]
+theorem boundaryContribution_ofChartBox (G : BoundaryChartBox M)
+    (χ : ℝSpace (n + 1) → ℝ)
+    (scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
+    (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
+    (scalar_support_disjoint_artificial :
+      Disjoint (Function.support (χ ∘ (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
+        (CubeStokes.boxArtificialFaces G.a G.b))
+    (scalar_eventually_zero_off_U_in_carrier :
+      ∀ y ∈ M.carrier, y ∉ G.U → χ =ᶠ[𝓝 y] fun _ => 0) :
+    (ofChartBox G χ scalar_smooth localized_differentiable
+      scalar_support_disjoint_artificial
+      scalar_eventually_zero_off_U_in_carrier).boundaryContribution =
+        G.boundaryContribution χ ω :=
+  rfl
 
 /-- Carrier integral of a boundary localized piece equals its patch-local boundary contribution. -/
 theorem carrierIntegral_eq_boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω)
@@ -182,6 +225,8 @@ theorem carrierIntegral_eq_boundaryContribution (Q : BoundaryLocalizedStokesPiec
         Q.χ ω Q.a Q.b Q.U_measurable Q.U_subset_patch Q.flattening_image_eq_box
         Q.box_le Q.box_zero_low Q.scalar_smooth hω Q.scalar_support_disjoint_artificial
     simpa [BoundaryLocalizedStokesPiece.boundaryContribution,
+      BoundaryChartBox.boundaryContribution,
+      BoundaryLocalizedStokesPiece.chartBox,
       BoundaryLocalizedStokesPiece.boundaryTail,
       BoundaryLocalizedStokesPiece.boundaryTail_subset_localCoordDomain] using hlocal_raw
   exact hrestrict.trans hlocal

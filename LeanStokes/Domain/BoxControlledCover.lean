@@ -634,11 +634,27 @@ theorem activeBoxControlledCoverIndex_spec
   exact Classical.choose_spec
     (M.tsupport_subset_cover_of_mem_compactActiveFinset_of_isSubordinate ρ hρ j.2)
 
-/-- Certified contribution of an active box-controlled partition element.
+/-- Boundary-side contribution associated to an active box-controlled partition element.
 
 Interior cover members contribute `0`; boundary cover members contribute the corresponding
-patch-local boundary integral.  The subtype stores the carrier-integral equality alongside the
-chosen real contribution. -/
+patch-local boundary integral.  This value is still tied to the chosen box-controlled cover member
+selected from `hρ`; it is not yet a chart-independent boundary integral. -/
+noncomputable def activeBoxControlledContribution
+    {M : SmoothDomain (n + 1)} (ω : DiffForm (n + 1) n)
+    (ρ : SmoothPartitionOfUnity (Option (BoxControlledCoverIndex M))
+      (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
+    (j : { i // i ∈ M.compactActiveFinset ρ }) : ℝ :=
+  match activeBoxControlledCoverIndex ρ hρ j with
+  | BoxControlledCoverIndex.interior _ => 0
+  | BoxControlledCoverIndex.boundary C =>
+      C.G.boundaryContribution (fun z => ρ j.1 z) ω
+
+/-- Certified contribution equality for an active box-controlled partition element.
+
+Interior cover members contribute `0`; boundary cover members contribute the corresponding
+patch-local boundary integral.  Smoothness of `ω` is used only to prove that the carrier integral
+equals the boundary-side contribution value. -/
 noncomputable def activeBoxControlledContributionCertificate
     {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
     (ρ : SmoothPartitionOfUnity (Option (BoxControlledCoverIndex M))
@@ -646,9 +662,9 @@ noncomputable def activeBoxControlledContributionCertificate
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (j : { i // i ∈ M.compactActiveFinset ρ }) :
-    { r : ℝ //
-      DiffForm.integral (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω))
-        M.carrier = r } := by
+    DiffForm.integral (DiffForm.extd (DiffForm.fsmul (fun z => ρ j.1 z) ω))
+      M.carrier =
+        activeBoxControlledContribution ω ρ hρ j := by
   have hspec := activeBoxControlledCoverIndex_spec ρ hρ j
   cases hI : activeBoxControlledCoverIndex ρ hρ j with
   | interior C =>
@@ -657,23 +673,15 @@ noncomputable def activeBoxControlledContributionCertificate
       let Q :=
         (C.toInteriorLocalizedStokesPieceOfSmoothPartition ρ j.1 hω hχV).toLocalizedStokesPiece
           hω
-      exact ⟨0, by simpa [Q] using Q.carrier_integral_eq_contribution⟩
+      simpa [activeBoxControlledContribution, hI, Q] using Q.carrier_integral_eq_contribution
   | boundary C =>
       have hχV : tsupport (fun z => ρ j.1 z) ⊆ C.V := by
         simpa [hI, boxControlledCarrierCover] using hspec.2
       let Q := C.toBoundaryLocalizedStokesPieceOfSmoothPartition ρ j.1 hω hχV
       have hQ := (Q.toLocalizedStokesPiece hω).carrier_integral_eq_contribution
-      exact ⟨Q.boundaryContribution, by simpa [Q] using hQ⟩
-
-/-- The real contribution associated to an active box-controlled partition element. -/
-noncomputable def activeBoxControlledContribution
-    {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
-    (ρ : SmoothPartitionOfUnity (Option (BoxControlledCoverIndex M))
-      (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
-    (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
-    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (j : { i // i ∈ M.compactActiveFinset ρ }) : ℝ :=
-  (activeBoxControlledContributionCertificate ρ hρ hω j).1
+      simpa [activeBoxControlledContribution, hI, Q,
+        BoundaryBoxCoverMember.toBoundaryLocalizedStokesPieceOfSmoothPartition,
+        BoundaryLocalizedStokesPiece.boundaryContribution_ofChartBox] using hQ
 
 /-- Localized Stokes piece carried by one active box-controlled partition element. -/
 noncomputable def activeBoxControlledLocalizedPiece
@@ -689,9 +697,9 @@ noncomputable def activeBoxControlledLocalizedPiece
   localized_extd_integrable :=
     M.integrableOn_topCoeff_extd_carrier_of_contDiff
       (DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty j.1) hω)
-  contribution := activeBoxControlledContribution ρ hρ hω j
+  contribution := activeBoxControlledContribution ω ρ hρ j
   carrier_integral_eq_contribution :=
-    (activeBoxControlledContributionCertificate ρ hρ hω j).2
+    activeBoxControlledContributionCertificate ρ hρ hω j
 
 @[simp]
 theorem activeBoxControlledLocalizedPiece_chi
@@ -705,6 +713,29 @@ theorem activeBoxControlledLocalizedPiece_chi
       fun z => ρ j.1 z :=
   rfl
 
+/-- Boundary-side sum determined by a box-controlled smooth partition.
+
+This is an intermediate box-controlled boundary integral, not yet a canonical or
+chart-independent boundary integral for the domain. -/
+noncomputable def boxControlledBoundaryIntegral (M : SmoothDomain (n + 1))
+    (ρ : SmoothPartitionOfUnity (Option (BoxControlledCoverIndex M))
+      (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
+    (ω : DiffForm (n + 1) n) : ℝ :=
+  ∑ j ∈ (M.compactActiveFinset ρ).attach,
+    activeBoxControlledContribution ω ρ hρ j
+
+@[simp]
+theorem boxControlledBoundaryIntegral_eq_sum (M : SmoothDomain (n + 1))
+    (ρ : SmoothPartitionOfUnity (Option (BoxControlledCoverIndex M))
+      (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
+    (ω : DiffForm (n + 1) n) :
+    M.boxControlledBoundaryIntegral ρ hρ ω =
+      ∑ j ∈ (M.compactActiveFinset ρ).attach,
+        activeBoxControlledContribution ω ρ hρ j :=
+  rfl
+
 /-- Finite localized Stokes assembly for an ambient smooth partition subordinate to the
 box-controlled carrier cover. -/
 theorem finite_boxControlled_localized_stokes_of_smoothPartition
@@ -714,8 +745,7 @@ theorem finite_boxControlled_localized_stokes_of_smoothPartition
     (hρ : ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover))
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     M.domainIntegral (DiffForm.extd ω) =
-      ∑ j ∈ (M.compactActiveFinset ρ).attach,
-        activeBoxControlledContribution ρ hρ hω j := by
+      M.boxControlledBoundaryIntegral ρ hρ ω := by
   simpa [activeBoxControlledLocalizedPiece, activeBoxControlledContribution] using
     finite_localized_stokes_of_smoothPartition_on_active ρ
       (activeBoxControlledLocalizedPiece ρ hρ hω)
