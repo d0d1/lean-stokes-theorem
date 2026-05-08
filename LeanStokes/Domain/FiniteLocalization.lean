@@ -5,9 +5,8 @@ Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.BoundaryChartPatchStokes
 import LeanStokes.Domain.DomainIntegral
+import LeanStokes.Domain.PartitionOfUnity
 import LeanStokes.Integration.Localization
-import Mathlib.Geometry.Manifold.PartitionOfUnity
-import Mathlib.Topology.Compactness.LocallyFinite
 
 /-!
 # Finite Localized Boundary Stokes Assembly
@@ -27,59 +26,6 @@ open scoped BigOperators Topology Manifold
 namespace SmoothDomain
 
 variable {n : ℕ}
-
-section SmoothPartition
-
-variable {ι : Type*} (M : SmoothDomain (n + 1))
-
-/-- Indices whose topological support meets the compact carrier.
-
-This is the finite active set used to turn a locally finite ambient smooth partition of unity into
-the finite local partition hypothesis required by localized Stokes assembly.  The use of
-`tsupport`, rather than raw support, is essential near boundary points of the carrier. -/
-def compactActiveFinset
-    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ) :
-    Finset ι :=
-  (ρ.toPartitionOfUnity.locallyFinite_tsupport.finite_nonempty_inter_compact
-    M.carrier_isCompact).toFinset
-
-@[simp]
-theorem mem_compactActiveFinset
-    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
-    {i : ι} :
-    i ∈ M.compactActiveFinset ρ ↔ (tsupport (ρ i) ∩ M.carrier).Nonempty := by
-  simp [compactActiveFinset]
-
-/-- At a carrier point, every index in the pointwise topological support is globally active. -/
-theorem fintsupport_subset_compactActiveFinset
-    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
-    {y : ℝSpace (n + 1)} (hy : y ∈ M.carrier) :
-    ρ.fintsupport y ⊆ M.compactActiveFinset ρ := by
-  intro i hi
-  rw [mem_compactActiveFinset]
-  rw [ρ.mem_fintsupport_iff] at hi
-  exact ⟨y, hi, hy⟩
-
-/-- Near a carrier point, the pointwise support of an ambient smooth partition is contained in the
-compact active set. -/
-theorem eventually_finsupport_subset_compactActiveFinset
-    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
-    {y : ℝSpace (n + 1)} (hy : y ∈ M.carrier) :
-    ∀ᶠ z in 𝓝 y, ρ.finsupport z ⊆ M.compactActiveFinset ρ :=
-  (ρ.eventually_finsupport_subset y).mono fun _ hz =>
-    hz.trans (M.fintsupport_subset_compactActiveFinset ρ hy)
-
-/-- A globally defined ambient smooth partition of unity has a finite subfamily whose scalar sum is
-equal to one in an ambient neighborhood of every carrier point. -/
-theorem smoothPartition_compactActive_eventuallyEq_one
-    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
-    {y : ℝSpace (n + 1)} (hy : y ∈ M.carrier) :
-    (fun z => ∑ i ∈ M.compactActiveFinset ρ, ρ i z) =ᶠ[𝓝 y] fun _ => 1 := by
-  filter_upwards [M.eventually_finsupport_subset_compactActiveFinset ρ hy] with z hz
-  simpa using
-    (ρ.sum_finsupport' z (show z ∈ (univ : Set (ℝSpace (n + 1))) by simp) hz)
-
-end SmoothPartition
 
 /-- One certified scalar-localized boundary patch contribution to Stokes.
 
