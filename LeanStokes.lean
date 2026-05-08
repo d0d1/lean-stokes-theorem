@@ -75,6 +75,7 @@ import LeanStokes.Domain.BoundaryInteriorCover
 import LeanStokes.Domain.LocalBox
 import LeanStokes.Domain.FiniteLocalization
 import LeanStokes.Domain.BoxControlledCover
+import LeanStokes.Domain.BoxControlledStokes
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain
 import LeanStokes.SingularCubeStokes.BdryBdry
