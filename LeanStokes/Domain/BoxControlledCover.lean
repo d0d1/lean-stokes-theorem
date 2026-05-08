@@ -21,6 +21,95 @@ noncomputable section
 open Set MeasureTheory
 open scoped BigOperators Topology Manifold
 
+namespace CubeStokes
+
+variable {n : ℕ}
+
+/-- Coordinatewise strict open box in `Fin d → ℝ`.
+
+This is intentionally not `Set.Ioo c d`: the order interval for the product order is weaker than
+coordinatewise strict containment. -/
+def coordOpenBox {d : ℕ} (c d' : ℝSpace d) : Set (ℝSpace d) :=
+  {x | ∀ i, c i < x i ∧ x i < d' i}
+
+/-- Coordinatewise strict open boxes are open in the product topology. -/
+theorem isOpen_coordOpenBox {d : ℕ} (c d' : ℝSpace d) :
+    IsOpen (coordOpenBox c d') := by
+  unfold coordOpenBox
+  rw [show {x : ℝSpace d | ∀ i, c i < x i ∧ x i < d' i} =
+      ⋂ i, {x : ℝSpace d | c i < x i ∧ x i < d' i} by
+    ext x
+    simp]
+  exact isOpen_iInter_of_finite fun i =>
+    (isOpen_lt continuous_const (continuous_apply i)).inter
+      (isOpen_lt (continuous_apply i) continuous_const)
+
+/-- A coordinatewise strict open box is a neighborhood of any point with coordinatewise strict
+bounds. -/
+theorem coordOpenBox_mem_nhds {d : ℕ} {c d' x : ℝSpace d}
+    (hx : ∀ i, c i < x i ∧ x i < d' i) :
+    coordOpenBox c d' ∈ 𝓝 x :=
+  (isOpen_coordOpenBox c d').mem_nhds hx
+
+/-- A coordinatewise strict inner open box lies in a larger closed box when every inner coordinate
+is strictly between the corresponding outer bounds. -/
+theorem coordOpenBox_subset_Icc_of_lt
+    {a b c d : ℝSpace (n + 1)}
+    (hac : ∀ i, a i < c i) (hdb : ∀ i, d i < b i) :
+    coordOpenBox c d ⊆ Icc a b := by
+  intro x hx
+  rw [mem_Icc]
+  constructor
+  · intro i
+    exact le_of_lt ((hac i).trans (hx i).1)
+  · intro i
+    exact le_of_lt ((hx i).2.trans (hdb i))
+
+/-- A coordinatewise strict inner open box is disjoint from the formal boundary faces of a larger
+closed box. -/
+theorem disjoint_coordOpenBox_boxBoundaryFaces_of_lt
+    {a b c d : ℝSpace (n + 1)}
+    (hac : ∀ i, a i < c i) (hdb : ∀ i, d i < b i) :
+    Disjoint (coordOpenBox c d) (boxBoundaryFaces a b) := by
+  rw [disjoint_left]
+  intro x hxI hxF
+  unfold boxBoundaryFaces at hxF
+  rcases mem_iUnion.mp hxF with ⟨i, hface⟩
+  rcases hface with hhigh | hlow
+  · rcases hhigh with ⟨y, _hy, rfl⟩
+    have hb_lt_d : b i < d i := by simpa using (hxI i).2
+    exact (hdb i).not_gt hb_lt_d
+  · rcases hlow with ⟨y, _hy, rfl⟩
+    have hc_lt_a : c i < a i := by simpa using (hxI i).1
+    exact (hac i).not_gt hc_lt_a
+
+/-- A coordinatewise strict inner open box that stays below the high normal face and away from
+successor-coordinate faces is disjoint from the artificial faces of a larger half-space box. -/
+theorem disjoint_coordOpenBox_boxArtificialFaces_of_lt
+    {a b c d : ℝSpace (n + 1)}
+    (h0 : d (0 : Fin (n + 1)) < b (0 : Fin (n + 1)))
+    (hac : ∀ i : Fin n, a i.succ < c i.succ)
+    (hdb : ∀ i : Fin n, d i.succ < b i.succ) :
+    Disjoint (coordOpenBox c d) (boxArtificialFaces a b) := by
+  rw [disjoint_left]
+  intro x hxI hxF
+  unfold boxArtificialFaces at hxF
+  rcases hxF with hzero | hsucc
+  · rcases hzero with ⟨y, _hy, rfl⟩
+    have hb_lt_d : b (0 : Fin (n + 1)) < d (0 : Fin (n + 1)) := by
+      simpa using (hxI (0 : Fin (n + 1))).2
+    exact h0.not_gt hb_lt_d
+  · rcases mem_iUnion.mp hsucc with ⟨i, hface⟩
+    rcases hface with hhigh | hlow
+    · rcases hhigh with ⟨y, _hy, rfl⟩
+      have hb_lt_d : b i.succ < d i.succ := by simpa using (hxI i.succ).2
+      exact (hdb i).not_gt hb_lt_d
+    · rcases hlow with ⟨y, _hy, rfl⟩
+      have hc_lt_a : c i.succ < a i.succ := by simpa using (hxI i.succ).1
+      exact (hac i).not_gt hc_lt_a
+
+end CubeStokes
+
 namespace SmoothDomain
 
 variable {n : ℕ}
@@ -42,6 +131,23 @@ structure InteriorBoxCoverMember (M : SmoothDomain (n + 1)) where
 namespace InteriorBoxCoverMember
 
 variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Build an interior box-controlled cover member from a coordinatewise strict inner open box. -/
+def ofCoordOpenBox
+    {a b c d : ℝSpace (n + 1)}
+    (box_le : a ≤ b) (box_subset_carrier : Icc a b ⊆ M.carrier)
+    (hac : ∀ i, a i < c i) (hdb : ∀ i, d i < b i) :
+    InteriorBoxCoverMember M where
+  V := CubeStokes.coordOpenBox c d
+  isOpen_V := CubeStokes.isOpen_coordOpenBox c d
+  G := {
+    a := a
+    b := b
+    box_le := box_le
+    box_subset_carrier := box_subset_carrier }
+  V_subset_box := CubeStokes.coordOpenBox_subset_Icc_of_lt hac hdb
+  V_disjoint_boxBoundaryFaces :=
+    CubeStokes.disjoint_coordOpenBox_boxBoundaryFaces_of_lt hac hdb
 
 /-- Topological support controlled by an interior cover member lies in its closed box. -/
 theorem tsupport_subset_box (C : InteriorBoxCoverMember M)
@@ -105,6 +211,25 @@ structure BoundaryBoxCoverMember (M : SmoothDomain (n + 1)) where
 namespace BoundaryBoxCoverMember
 
 variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Build a boundary box-controlled cover member by proving that the model-coordinate preimage of
+the ambient open member lies in a coordinatewise strict inner box avoiding the artificial faces. -/
+def ofModelPreimageSubsetCoordOpenBox
+    (G : BoundaryChartBox M) {V : Set (ℝSpace (n + 1))} (hV : IsOpen V)
+    (hVU : V ∩ M.carrier ⊆ G.U) {c d : ℝSpace (n + 1)}
+    (h0 : d (0 : Fin (n + 1)) < G.b (0 : Fin (n + 1)))
+    (hac : ∀ i : Fin n, G.a i.succ < c i.succ)
+    (hdb : ∀ i : Fin n, d i.succ < G.b i.succ)
+    (hpre :
+      (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm ⁻¹' V ⊆
+        CubeStokes.coordOpenBox c d) :
+    BoundaryBoxCoverMember M where
+  V := V
+  isOpen_V := hV
+  G := G
+  V_inter_carrier_subset_U := hVU
+  model_preimage_V_disjoint_artificial :=
+    (CubeStokes.disjoint_coordOpenBox_boxArtificialFaces_of_lt h0 hac hdb).mono_left hpre
 
 /-- A carrier point outside the boundary box is also outside the ambient cover member. -/
 theorem notMem_V_of_mem_carrier_notMem_U (C : BoundaryBoxCoverMember M)
