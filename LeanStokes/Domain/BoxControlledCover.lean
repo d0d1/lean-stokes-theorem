@@ -108,6 +108,36 @@ theorem disjoint_coordOpenBox_boxArtificialFaces_of_lt
       have hc_lt_a : c i.succ < a i.succ := by simpa using (hxI i.succ).1
       exact (hac i).not_gt hc_lt_a
 
+/-- The artificial face point-set of a half-space box is contained in the box. -/
+theorem boxArtificialFaces_subset_Icc {a b : ℝSpace (n + 1)} (hle : a ≤ b) :
+    boxArtificialFaces a b ⊆ Icc a b := by
+  intro x hx
+  unfold boxArtificialFaces at hx
+  rcases hx with hzero | hsucc
+  · rcases hzero with ⟨y, hy, rfl⟩
+    rw [mem_Icc]
+    constructor
+    · rw [Fin.le_insertNth_iff]
+      exact ⟨hle 0, hy.1⟩
+    · rw [Fin.insertNth_le_iff]
+      exact ⟨le_rfl, hy.2⟩
+  · rcases mem_iUnion.mp hsucc with ⟨i, hface⟩
+    rcases hface with hhigh | hlow
+    · rcases hhigh with ⟨y, hy, rfl⟩
+      rw [mem_Icc]
+      constructor
+      · rw [Fin.le_insertNth_iff]
+        exact ⟨hle i.succ, hy.1⟩
+      · rw [Fin.insertNth_le_iff]
+        exact ⟨le_rfl, hy.2⟩
+    · rcases hlow with ⟨y, hy, rfl⟩
+      rw [mem_Icc]
+      constructor
+      · rw [Fin.le_insertNth_iff]
+        exact ⟨le_rfl, hy.1⟩
+      · rw [Fin.insertNth_le_iff]
+        exact ⟨hle i.succ, hy.2⟩
+
 end CubeStokes
 
 namespace SmoothDomain
@@ -190,6 +220,51 @@ def toInteriorLocalizedStokesPieceOfSmoothPartition
 
 end InteriorBoxCoverMember
 
+/-- Every strict interior point has an ambient box-controlled cover member.
+
+The proof uses a small closed coordinate box inside the open strict interior and a smaller
+coordinatewise open box around the point to avoid all formal boundary faces. -/
+theorem exists_interiorBoxCoverMember_at_int (M : SmoothDomain (n + 1))
+    {x : ℝSpace (n + 1)} (hx : x ∈ M.int) :
+    ∃ C : InteriorBoxCoverMember M, x ∈ C.V := by
+  rcases Metric.mem_nhds_iff.mp (M.isOpen_int.mem_nhds hx) with ⟨ε, hε, hball⟩
+  let a : ℝSpace (n + 1) := fun i => x i - ε / 2
+  let b : ℝSpace (n + 1) := fun i => x i + ε / 2
+  let c : ℝSpace (n + 1) := fun i => x i - ε / 4
+  let d : ℝSpace (n + 1) := fun i => x i + ε / 4
+  have hbox_le : a ≤ b := by
+    intro i
+    dsimp [a, b]
+    linarith
+  have hbox_subset_carrier : Icc a b ⊆ M.carrier := by
+    intro y hy
+    apply M.int_subset_carrier
+    apply hball
+    rw [Metric.mem_ball]
+    have hdist_le : dist y x ≤ ε / 2 := by
+      rw [dist_pi_le_iff (by positivity)]
+      intro i
+      rw [Real.dist_eq]
+      apply abs_le.mpr
+      constructor
+      · have hleft : x i - ε / 2 ≤ y i := by simpa [a] using hy.1 i
+        linarith
+      · have hright : y i ≤ x i + ε / 2 := by simpa [b] using hy.2 i
+        linarith
+    linarith
+  have hac : ∀ i, a i < c i := by
+    intro i
+    dsimp [a, c]
+    linarith
+  have hdb : ∀ i, d i < b i := by
+    intro i
+    dsimp [d, b]
+    linarith
+  refine ⟨InteriorBoxCoverMember.ofCoordOpenBox hbox_le hbox_subset_carrier hac hdb, ?_⟩
+  intro i
+  dsimp [InteriorBoxCoverMember.ofCoordOpenBox, CubeStokes.coordOpenBox, c, d]
+  constructor <;> linarith
+
 /-- An ambient open cover member controlled by a boundary half-space box.
 
 The open set `V` is used for partition subordination.  The closed carrier-side
@@ -211,6 +286,67 @@ structure BoundaryBoxCoverMember (M : SmoothDomain (n + 1)) where
 namespace BoundaryBoxCoverMember
 
 variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
+
+/-- Build a boundary box-controlled cover member from a larger closed model half-box and a smaller
+ambient coordinatewise open model box.
+
+The closed half-box supplies the carrier-side Stokes domain.  The smaller open box may cross the
+true boundary in the normal coordinate, but its carrier-side part lies in the closed half-box and it
+stays strictly away from all artificial faces. -/
+def ofModelBoxes
+    {x : ℝSpace (n + 1)} (P : BoundaryChartPatch M x) (a b c d : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hboxsub : Icc a b ⊆ { z |
+      z ∈ (M.halfSpaceFlatteningChart P.i x P.h).target ∧
+        (M.halfSpaceFlatteningChart P.i x P.h).symm z ∈ P.U })
+    (h0 : d (0 : Fin (n + 1)) < b (0 : Fin (n + 1)))
+    (hac : ∀ i : Fin n, a i.succ < c i.succ)
+    (hdb : ∀ i : Fin n, d i.succ < b i.succ) :
+    BoundaryBoxCoverMember M := by
+  let G : BoundaryChartBox M := BoundaryChartBox.ofModelBoxSubsetPatch P a b hle ha0 hboxsub
+  refine {
+    V := (M.halfSpaceFlatteningMap P.i) ⁻¹' CubeStokes.coordOpenBox c d ∩ P.U
+    isOpen_V := ?_
+    G := G
+    V_inter_carrier_subset_U := ?_
+    model_preimage_V_disjoint_artificial := ?_ }
+  · exact (((M.contDiff_halfSpaceFlatteningMap P.i).continuous).isOpen_preimage _
+      (CubeStokes.isOpen_coordOpenBox c d)).inter P.isOpen_U
+  · intro y hy
+    rcases hy with ⟨hyV, hyM⟩
+    dsimp [G, BoundaryChartBox.ofModelBoxSubsetPatch]
+    constructor
+    · change M.halfSpaceFlatteningMap P.i y ∈ Icc a b
+      rw [mem_Icc]
+      constructor
+      · intro j
+        cases j using Fin.cases with
+        | zero =>
+            have hnonneg : 0 ≤ M.halfSpaceFlatteningMap P.i y (0 : Fin (n + 1)) := by
+              rw [M.mem_carrier_iff_halfSpaceFlatteningMap_mem P.i y] at hyM
+              exact hyM
+            simpa [ha0] using hnonneg
+        | succ i =>
+            exact le_of_lt ((hac i).trans (hyV.1 i.succ).1)
+      · intro j
+        cases j using Fin.cases with
+        | zero =>
+            exact le_of_lt ((hyV.1 (0 : Fin (n + 1))).2.trans h0)
+        | succ i =>
+            exact le_of_lt ((hyV.1 i.succ).2.trans (hdb i))
+    · exact hyV.2
+  · rw [disjoint_left]
+    intro z hzV hzF
+    dsimp [G, BoundaryChartBox.ofModelBoxSubsetPatch] at hzV hzF
+    have hzbox : z ∈ Icc a b := CubeStokes.boxArtificialFaces_subset_Icc hle hzF
+    have hztarget : z ∈ (M.halfSpaceFlatteningChart P.i x P.h).target := (hboxsub hzbox).1
+    let e := M.halfSpaceFlatteningChart P.i x P.h
+    have hright : M.halfSpaceFlatteningMap P.i (e.symm z) = z := by
+      simpa [e] using e.right_inv hztarget
+    have hzcoord : z ∈ CubeStokes.coordOpenBox c d := by
+      simpa [hright, e] using hzV.1
+    exact (disjoint_left.mp (CubeStokes.disjoint_coordOpenBox_boxArtificialFaces_of_lt h0 hac hdb))
+      hzcoord hzF
 
 /-- Build a boundary box-controlled cover member by proving that the model-coordinate preimage of
 the ambient open member lies in a coordinatewise strict inner box avoiding the artificial faces. -/
@@ -295,6 +431,101 @@ def toBoundaryLocalizedStokesPieceOfSmoothPartition
 
 end BoundaryBoxCoverMember
 
+/-- Every boundary point has an ambient box-controlled cover member.
+
+The cover member is obtained by choosing a small closed half-box in flattening coordinates whose
+low normal face is the true boundary face, and a smaller ambient coordinatewise open box around the
+boundary point.  The open box is allowed to cross the true boundary, while its carrier-side part is
+contained in the closed half-box and its model preimage avoids all artificial faces. -/
+theorem exists_boundaryBoxCoverMember_at_boundary (M : SmoothDomain (n + 1))
+    {x : ℝSpace (n + 1)} (hx : x ∈ M.boundary) :
+    ∃ C : BoundaryBoxCoverMember M, x ∈ C.V := by
+  let P : BoundaryChartPatch M x := Classical.choice (M.exists_boundaryChartPatch_at_boundary hx)
+  let e := M.halfSpaceFlatteningChart P.i x P.h
+  let z0 : ℝSpace (n + 1) := M.halfSpaceFlatteningMap P.i x
+  have hz0target : z0 ∈ e.target := by
+    simpa [e, z0] using M.image_mem_halfSpaceFlatteningChart_target P.i x P.h
+  have hsymm_z0 : e.symm z0 = x := by
+    simpa [e, z0] using e.left_inv (M.mem_halfSpaceFlatteningChart_source P.i x P.h)
+  have hW : e.target ∩ e.symm ⁻¹' P.U ∈ 𝓝 z0 := by
+    have htarget : e.target ∈ 𝓝 z0 := e.open_target.mem_nhds hz0target
+    have hpreU : e.symm ⁻¹' P.U ∈ 𝓝 z0 := by
+      exact (e.continuousAt_symm hz0target).preimage_mem_nhds
+        (P.isOpen_U.mem_nhds (by simpa [hsymm_z0] using P.center_mem_U))
+    exact Filter.inter_mem htarget hpreU
+  rcases Metric.mem_nhds_iff.mp hW with ⟨ε, hε, hballW⟩
+  have hz0_zero : z0 (0 : Fin (n + 1)) = 0 := by
+    simpa [z0, HalfSpaceBdry] using
+      (M.mem_boundary_iff_halfSpaceFlatteningMap_mem P.i x).mp hx
+  let a : ℝSpace (n + 1) := Fin.cases (0 : ℝ) (fun i : Fin n => z0 i.succ - ε / 2)
+  let b : ℝSpace (n + 1) := Fin.cases (ε / 2) (fun i : Fin n => z0 i.succ + ε / 2)
+  let c : ℝSpace (n + 1) := Fin.cases (-ε / 4) (fun i : Fin n => z0 i.succ - ε / 4)
+  let d : ℝSpace (n + 1) := Fin.cases (ε / 4) (fun i : Fin n => z0 i.succ + ε / 4)
+  have hle : a ≤ b := by
+    intro j
+    cases j using Fin.cases with
+    | zero =>
+        dsimp [a, b]
+        linarith
+    | succ i =>
+        dsimp [a, b]
+        linarith
+  have ha0 : a (0 : Fin (n + 1)) = 0 := by
+    simp [a]
+  have hboxsub : Icc a b ⊆ { z |
+      z ∈ (M.halfSpaceFlatteningChart P.i x P.h).target ∧
+        (M.halfSpaceFlatteningChart P.i x P.h).symm z ∈ P.U } := by
+    intro z hz
+    have hzball : z ∈ Metric.ball z0 ε := by
+      rw [Metric.mem_ball]
+      have hdist_le : dist z z0 ≤ ε / 2 := by
+        rw [dist_pi_le_iff (by positivity)]
+        intro j
+        rw [Real.dist_eq]
+        apply abs_le.mpr
+        cases j using Fin.cases with
+        | zero =>
+            constructor
+            · have hlow : (0 : ℝ) ≤ z (0 : Fin (n + 1)) := by simpa [a] using hz.1 0
+              rw [hz0_zero]
+              linarith
+            · have hhi : z (0 : Fin (n + 1)) ≤ ε / 2 := by simpa [b] using hz.2 0
+              rw [hz0_zero]
+              linarith
+        | succ i =>
+            constructor
+            · have hlow : z0 i.succ - ε / 2 ≤ z i.succ := by simpa [a] using hz.1 i.succ
+              linarith
+            · have hhi : z i.succ ≤ z0 i.succ + ε / 2 := by simpa [b] using hz.2 i.succ
+              linarith
+      linarith
+    exact hballW hzball
+  have h0 : d (0 : Fin (n + 1)) < b (0 : Fin (n + 1)) := by
+    dsimp [d, b]
+    linarith
+  have hac : ∀ i : Fin n, a i.succ < c i.succ := by
+    intro i
+    dsimp [a, c]
+    linarith
+  have hdb : ∀ i : Fin n, d i.succ < b i.succ := by
+    intro i
+    dsimp [d, b]
+    linarith
+  let C : BoundaryBoxCoverMember M :=
+    BoundaryBoxCoverMember.ofModelBoxes P a b c d hle ha0 hboxsub h0 hac hdb
+  refine ⟨C, ?_⟩
+  dsimp [C, BoundaryBoxCoverMember.ofModelBoxes]
+  constructor
+  · intro j
+    cases j using Fin.cases with
+    | zero =>
+        dsimp [c, d, z0]
+        constructor <;> linarith
+    | succ i =>
+        dsimp [c, d]
+        constructor <;> linarith
+  · exact P.center_mem_U
+
 /-- Indices for the refined carrier cover by box-controlled open members. -/
 inductive BoxControlledCoverIndex (M : SmoothDomain (n + 1)) where
   | interior : InteriorBoxCoverMember M → BoxControlledCoverIndex M
@@ -326,9 +557,8 @@ theorem isOpen_boxControlledCarrierCover (M : SmoothDomain (n + 1)) :
   | interior C => exact C.isOpen_V
   | boundary C => exact C.isOpen_V
 
-/-- Conditional carrier coverage from pointwise existence of box-controlled interior and boundary
-members.  Later geometric work should discharge the two pointwise-existence hypotheses. -/
-theorem carrier_subset_iUnion_boxControlledCarrierCover
+/-- Carrier coverage from pointwise existence of box-controlled interior and boundary members. -/
+theorem carrier_subset_iUnion_boxControlledCarrierCover_of_pointwise
     (M : SmoothDomain (n + 1))
     (h_int : ∀ x : ℝSpace (n + 1), x ∈ M.int →
       ∃ C : InteriorBoxCoverMember M, x ∈ C.V)
@@ -342,9 +572,9 @@ theorem carrier_subset_iUnion_boxControlledCarrierCover
   · rcases h_boundary x hx_boundary with ⟨C, hxC⟩
     exact mem_iUnion.mpr ⟨BoxControlledCoverIndex.boundary C, hxC⟩
 
-/-- Conditional existence of a global ambient smooth partition subordinate to the complement-
-extended box-controlled cover. -/
-theorem exists_smoothPartition_subordinate_ambientBoxControlledCover
+/-- Existence of a global ambient smooth partition from pointwise existence of box-controlled cover
+members. -/
+theorem exists_smoothPartition_subordinate_ambientBoxControlledCover_of_pointwise
     (M : SmoothDomain (n + 1))
     (h_int : ∀ x : ℝSpace (n + 1), x ∈ M.int →
       ∃ C : InteriorBoxCoverMember M, x ∈ C.V)
@@ -356,7 +586,48 @@ theorem exists_smoothPartition_subordinate_ambientBoxControlledCover
       ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover) :=
   M.exists_smoothPartition_subordinate_ambientCoverWithComplement
     M.boxControlledCarrierCover M.isOpen_boxControlledCarrierCover
-    (M.carrier_subset_iUnion_boxControlledCarrierCover h_int h_boundary)
+    (M.carrier_subset_iUnion_boxControlledCarrierCover_of_pointwise h_int h_boundary)
+
+/-- Carrier coverage after discharging the strict-interior pointwise existence geometrically. -/
+theorem carrier_subset_iUnion_boxControlledCarrierCover_of_boundary
+    (M : SmoothDomain (n + 1))
+    (h_boundary : ∀ x : ℝSpace (n + 1), x ∈ M.boundary →
+      ∃ C : BoundaryBoxCoverMember M, x ∈ C.V) :
+    M.carrier ⊆ ⋃ i, M.boxControlledCarrierCover i :=
+  M.carrier_subset_iUnion_boxControlledCarrierCover_of_pointwise
+    (fun _ hx => M.exists_interiorBoxCoverMember_at_int hx) h_boundary
+
+/-- Smooth partition existence after discharging the strict-interior pointwise existence
+geometrically.  Boundary pointwise existence remains the next local-chart geometry obligation. -/
+theorem exists_smoothPartition_subordinate_ambientBoxControlledCover_of_boundary
+    (M : SmoothDomain (n + 1))
+    (h_boundary : ∀ x : ℝSpace (n + 1), x ∈ M.boundary →
+      ∃ C : BoundaryBoxCoverMember M, x ∈ C.V) :
+    ∃ ρ : SmoothPartitionOfUnity
+        (Option (BoxControlledCoverIndex M)) (𝓘(ℝ, ℝSpace (n + 1)))
+        (ℝSpace (n + 1)) univ,
+      ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover) :=
+  M.exists_smoothPartition_subordinate_ambientBoxControlledCover_of_pointwise
+    (fun _ hx => M.exists_interiorBoxCoverMember_at_int hx) h_boundary
+
+/-- The box-controlled carrier cover covers the compact regular sublevel carrier. -/
+theorem carrier_subset_iUnion_boxControlledCarrierCover (M : SmoothDomain (n + 1)) :
+    M.carrier ⊆ ⋃ i, M.boxControlledCarrierCover i :=
+  M.carrier_subset_iUnion_boxControlledCarrierCover_of_pointwise
+    (fun _ hx => M.exists_interiorBoxCoverMember_at_int hx)
+    (fun _ hx => M.exists_boundaryBoxCoverMember_at_boundary hx)
+
+/-- A global ambient smooth partition subordinate to the complement-extended box-controlled
+cover. -/
+theorem exists_smoothPartition_subordinate_ambientBoxControlledCover
+    (M : SmoothDomain (n + 1)) :
+    ∃ ρ : SmoothPartitionOfUnity
+        (Option (BoxControlledCoverIndex M)) (𝓘(ℝ, ℝSpace (n + 1)))
+        (ℝSpace (n + 1)) univ,
+      ρ.IsSubordinate (M.ambientCoverWithComplement M.boxControlledCarrierCover) :=
+  M.exists_smoothPartition_subordinate_ambientCoverWithComplement
+    M.boxControlledCarrierCover M.isOpen_boxControlledCarrierCover
+    M.carrier_subset_iUnion_boxControlledCarrierCover
 
 end SmoothDomain
 

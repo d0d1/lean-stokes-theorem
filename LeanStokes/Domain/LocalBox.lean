@@ -56,6 +56,53 @@ theorem boundaryTail_subset_localCoordDomain (G : BoundaryChartBox M) :
   G.P.tailBox_subset_localCoordDomain_of_flattening_image_eq G.a G.b G.box_le
     G.box_zero_low G.U_subset_patch G.flattening_image_eq_box
 
+/-- Build a boundary chart box from a model half-box contained in the target side of a chart patch.
+
+The original-side set is the preimage of the model box under the flattening map, intersected with
+the certified patch neighborhood.  This keeps measurability elementary while giving exact image
+equality by the chart inverse on the model box. -/
+def ofModelBoxSubsetPatch
+    {x : ℝSpace (n + 1)} (P : BoundaryChartPatch M x) (a b : ℝSpace (n + 1))
+    (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
+    (hboxsub : Icc a b ⊆ { z |
+      z ∈ (M.halfSpaceFlatteningChart P.i x P.h).target ∧
+        (M.halfSpaceFlatteningChart P.i x P.h).symm z ∈ P.U }) :
+    BoundaryChartBox M where
+  x := x
+  P := P
+  U := (M.halfSpaceFlatteningMap P.i) ⁻¹' Icc a b ∩ P.U
+  a := a
+  b := b
+  U_measurable :=
+    (((M.contDiff_halfSpaceFlatteningMap P.i).continuous).measurable measurableSet_Icc).inter
+      P.measurableSet_U
+  U_subset_patch := by
+    intro y hy
+    exact hy.2
+  U_subset_carrier := by
+    intro y hy
+    rw [M.mem_carrier_iff_halfSpaceFlatteningMap_mem P.i y]
+    rw [HalfSpace]
+    have hlow : a (0 : Fin (n + 1)) ≤ M.halfSpaceFlatteningMap P.i y (0 : Fin (n + 1)) :=
+      hy.1.1 0
+    simpa [ha0] using hlow
+  flattening_image_eq_box := by
+    ext z
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      exact hy.1
+    · intro hz
+      let e := M.halfSpaceFlatteningChart P.i x P.h
+      have hzpatch := hboxsub hz
+      have hright : M.halfSpaceFlatteningMap P.i (e.symm z) = z := by
+        simpa [e] using e.right_inv hzpatch.1
+      refine ⟨e.symm z, ?_, hright⟩
+      constructor
+      · simpa [hright] using hz
+      · exact hzpatch.2
+  box_le := hle
+  box_zero_low := ha0
+
 end BoundaryChartBox
 
 /-- Pure geometry for one interior full box contained in the carrier. -/
