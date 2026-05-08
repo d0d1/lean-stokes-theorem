@@ -71,6 +71,7 @@ import LeanStokes.Domain.BoxStokes
 import LeanStokes.Domain.BoundaryChartPatchStokes
 import LeanStokes.Domain.PullbackBoxStokes
 import LeanStokes.Domain.PartitionOfUnity
+import LeanStokes.Domain.BoundaryInteriorCover
 import LeanStokes.Domain.FiniteLocalization
 import LeanStokes.SingularCubeStokes.FaceMatching
 import LeanStokes.SingularCubeStokes.Chain

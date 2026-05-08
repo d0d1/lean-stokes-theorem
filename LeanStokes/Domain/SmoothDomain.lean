@@ -166,6 +166,44 @@ theorem int_subset_carrier : M.int ⊆ M.carrier := by
   simp only [int, carrier, Set.mem_setOf_eq] at *
   linarith
 
+/-- A point of the carrier is either in the strict interior or on the boundary. -/
+theorem mem_carrier_iff_mem_int_or_mem_boundary {x : ℝSpace d} :
+    x ∈ M.carrier ↔ x ∈ M.int ∨ x ∈ M.boundary := by
+  simp only [carrier, int, boundary, mem_setOf_eq]
+  constructor
+  · exact lt_or_eq_of_le
+  · rintro (hx | hx)
+    · exact le_of_lt hx
+    · exact le_of_eq hx
+
+/-- The carrier is contained in the union of the strict interior and boundary. -/
+theorem carrier_subset_int_union_boundary : M.carrier ⊆ M.int ∪ M.boundary := by
+  intro x hx
+  exact (M.mem_carrier_iff_mem_int_or_mem_boundary.mp hx)
+
+/-- The carrier is the union of the strict interior and boundary. -/
+theorem carrier_eq_int_union_boundary : M.carrier = M.int ∪ M.boundary := by
+  ext x
+  simpa [Set.mem_union] using M.mem_carrier_iff_mem_int_or_mem_boundary (x := x)
+
+/-- The strict interior is disjoint from the boundary. -/
+theorem disjoint_int_boundary : Disjoint M.int M.boundary := by
+  rw [Set.disjoint_left]
+  intro x hx_int hx_boundary
+  rw [mem_boundary] at hx_boundary
+  rw [mem_int] at hx_int
+  linarith
+
+/-- The boundary is the carrier with the strict interior removed. -/
+theorem boundary_eq_carrier_diff_int : M.boundary = M.carrier \ M.int := by
+  ext x
+  simp only [carrier, int, boundary, mem_setOf_eq, Set.mem_diff]
+  constructor
+  · intro hx
+    exact ⟨le_of_eq hx, by linarith⟩
+  · intro hx
+    exact le_antisymm hx.1 (le_of_not_gt hx.2)
+
 theorem carrier_isCompact : IsCompact M.carrier := M.isCompact
 
 /-- The boundary is compact because it is a closed subset of the compact carrier. -/
