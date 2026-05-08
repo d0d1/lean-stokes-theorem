@@ -1,8 +1,9 @@
 # Domain Stokes v2 dependency plan
 
-This document records the dependency plan for a sorry-free Lean 4/mathlib proof of
-Stokes' theorem for compact regular sublevel domains in Euclidean space.  It is a
-technical plan for the Lean artifact, not a theorem statement substitution.
+This document records the dependency plan and current implementation status for
+a sorry-free Lean 4/mathlib proof of Stokes' theorem for compact regular
+sublevel domains in Euclidean space.  It is a technical record for the Lean
+artifact, not a substitute for the exported theorem statements.
 
 The target domain is a compact regular sublevel set
 
@@ -26,40 +27,35 @@ theorem SmoothDomain.stokes_boundaryIntegral
     M.domainIntegral (DiffForm.extd ω) = M.boundaryIntegral ω
 ```
 
-`M.boundaryIntegral ω` is currently the chosen box-controlled boundary sum from
+`M.boundaryIntegral ω` is the chosen box-controlled boundary sum from
 `LeanStokes.Domain.BoxControlledStokes`.  For smooth forms it agrees with every
 subordinate box-controlled boundary sum, as proved by
 `SmoothDomain.boundaryIntegral_eq_boxControlledBoundaryIntegral_of_contDiff`.
 This discharges the local support, cover, partition, and integrability
 hypotheses from the exported box-controlled theorem statement.
 
-This status does not mark the stronger manifold-style integration desiderata
-below as complete: no separate general manifold-with-boundary integration API is
-claimed, and chart-independence outside the box-controlled Euclidean
-construction remains future infrastructure.
+This is the boundary-integration construction used by the current Euclidean
+domain theorem.  It is independent of the subordinate box-controlled partition
+for smooth forms, but it intentionally remains narrower than a separate general
+manifold-with-boundary integration API; no chart-independence claim is made
+outside the box-controlled Euclidean construction.
 
-## Intended final theorem schema
+## Implemented exported theorem schema
 
-The intended exported theorem has the following shape, with names to be fixed by
-implementation:
+The implemented theorem has the intended compact-domain shape, expressed in
+positive dimension as `d = n + 1`:
 
 ```lean
-theorem smoothDomain_stokes
-    {d : ℕ} [NeZero d]
-    (M : SmoothDomain d)
-    (ω : DiffForm d (d - 1))
+theorem SmoothDomain.stokes_boundaryIntegral
+    (M : SmoothDomain (n + 1))
+    (ω : DiffForm (n + 1) n)
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
-    DiffForm.integral (DiffForm.extd ω) M.carrier =
-      M.boundaryIntegral ω
+    M.domainIntegral (DiffForm.extd ω) = M.boundaryIntegral ω
 ```
 
-If intermediate development requires support, chart, or integrability hypotheses,
-those hypotheses belong to local/intermediate lemmas.  The compact-domain theorem
-is complete only after those hypotheses have been discharged from the final
-globally smooth compact-domain statement.
-The final Lean statement may include explicit degree casts witnessing
-`(d - 1) + 1 = d` under `[NeZero d]`; those casts are implementation details, not
-extra mathematical assumptions.
+Intermediate lemmas still carry support, chart, and integrability hypotheses,
+but those hypotheses have been discharged from the exported globally smooth
+compact-domain statement.
 
 Dimension `d = 0` is not part of the boundary theorem above; the main theorem will
 use `[NeZero d]`.  A separate zero-dimensional convention may be added only if it
@@ -203,7 +199,12 @@ theorem unless a later proof explicitly constructs a cubical chain representing
 the oriented boundary and proves equality with the chart-defined boundary
 integral.  No claim of domain Stokes follows from the singular-cube result alone.
 
-## Infrastructure to build
+## Infrastructure plan and implementation status
+
+The subsections below record the original dependency plan together with the
+status of the current box-controlled Euclidean implementation.  Some
+manifold-style items remain useful future generalization work, but they are not
+prerequisites for the exported theorem above.
 
 ### 1. Domain API
 
@@ -263,7 +264,8 @@ The preferred construction is to choose a nonzero normal coordinate from
 
 ### 4. Boundary orientation and boundary integral
 
-Replace the current placeholder sign with a chart-aware orientation API:
+The implementation uses a chart-aware box-controlled boundary orientation
+convention:
 
 * identify the outward normal vector using the Euclidean inner product/Riesz
   identification, or work covectorially and prove the equivalent tangent-basis
@@ -275,14 +277,16 @@ Replace the current placeholder sign with a chart-aware orientation API:
   is a positive ambient basis.
   ```
 
-* prove the half-space model reduces to the expected `(-1)^(d - 1)` boundary-face
-  sign for the chosen first-coordinate convention;
-* prove boundary chart transition maps are orientation-preserving with respect
-  to this induced orientation;
-* define `M.boundaryIntegral ω` by oriented finite local charts and scalar
-  bumps;
-* prove independence of chart refinements/transition choices using the signed
-  boundary change-of-variables lemmas.
+* prove the half-space model reduces to the expected `-1` boundary-face sign for
+  the chosen first-coordinate upper-half-space convention;
+* define `M.boundaryIntegral ω` by a chosen finite box-controlled family of local
+  boundary charts and a smooth scalar partition;
+* prove that all subordinate box-controlled boundary sums agree for smooth forms,
+  by comparing each sum to the domain integral through the finite localized
+  Stokes theorem.
+
+A standalone transition-map theorem for arbitrary boundary atlases remains
+future manifold-style infrastructure and is not claimed by the current theorem.
 
 ### 5. Localization algebra
 
@@ -336,11 +340,13 @@ Assemble the compact-domain theorem:
 
 ## Completion checks
 
-The v2 theorem layer is complete only when:
+The current v2 theorem layer is complete for the box-controlled Euclidean
+compact regular sublevel-domain target when:
 
 * all definitions and the final compact-domain theorem build with `lake build`;
 * there are no `sorry` placeholders in the theorem layer;
 * `#print axioms` is checked for the final theorem and exported theorem-layer
   results;
-* the theorem statement proves the compact regular sublevel-domain result, not a
-  chart-dependent or chosen-cover-dependent substitute.
+* the theorem statement proves the compact regular sublevel-domain result using
+  `SmoothDomain.boundaryIntegral`, whose smooth-form independence from the
+  subordinate box-controlled partition is proved in Lean.
