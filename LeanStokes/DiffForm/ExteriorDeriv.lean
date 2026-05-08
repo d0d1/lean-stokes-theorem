@@ -22,7 +22,7 @@ We rely entirely on mathlib's `extDeriv` and do not redefine it.
 noncomputable section
 
 open Topology Filter Set
-open scoped Topology
+open scoped BigOperators Topology
 
 namespace DiffForm
 
@@ -58,6 +58,28 @@ theorem extd_smul (c : ℝ) (ω : DiffForm d n) :
   unfold extd
   change _root_.extDeriv (fun y => c • ω y) x = c • _root_.extDeriv ω x
   exact _root_.extDeriv_smul c ω
+
+@[simp] theorem extd_zero : extd (0 : DiffForm d n) = 0 := by
+  funext x
+  have h := extd_smul (x := x) (c := 0) (ω := (0 : DiffForm d n))
+  simpa using h
+
+/-- Linearity: exterior derivative commutes with finite sums of differentiable forms. -/
+theorem extd_finset_sum {ι : Type*} (s : Finset ι) (ω : ι → DiffForm d n)
+    (hω : ∀ i ∈ s, DifferentiableAt ℝ (ω i) x) :
+    extd (∑ i ∈ s, ω i) x = ∑ i ∈ s, extd (ω i) x := by
+  classical
+  induction s using Finset.induction_on with
+  | empty =>
+      simp
+  | insert a s ha ih =>
+      have ha_diff : DifferentiableAt ℝ (ω a) x := hω a (by simp)
+      have hs_diff : DifferentiableAt ℝ (∑ i ∈ s, ω i) x :=
+        DifferentiableAt.sum (fun i hi => hω i (by simp [hi, ha]))
+      have hrest : extd (∑ i ∈ s, ω i) x = ∑ i ∈ s, extd (ω i) x :=
+        ih (fun i hi => hω i (by simp [hi, ha]))
+      rw [Finset.sum_insert ha, extd_add (ω a) (∑ i ∈ s, ω i) ha_diff hs_diff,
+        hrest, Finset.sum_insert ha]
 
 /-- Exterior derivatives agree at a point when the forms agree in a neighborhood of that point. -/
 theorem extd_congr_of_eventuallyEq {ω₁ ω₂ : DiffForm d n} {x : ℝSpace d}
