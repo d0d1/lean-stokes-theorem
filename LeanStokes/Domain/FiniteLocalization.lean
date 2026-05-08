@@ -432,6 +432,18 @@ theorem finite_localized_stokes {M : SmoothDomain (n + 1)}
   intro i _
   exact (piece i).carrier_integral_eq_contribution
 
+/-- Finite localized Stokes assembly over the subtype of a finite index set.
+
+This avoids manufacturing dummy localized pieces for indices that are not actually active. -/
+theorem finite_localized_stokes_on_finset {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*} (s : Finset ι)
+    (piece : { i // i ∈ s } → LocalizedStokesPiece M ω)
+    (hpartition : ∀ y ∈ M.carrier,
+      (fun z => ∑ i ∈ s.attach, (piece i).χ z) =ᶠ[𝓝 y] fun _ => 1) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ s.attach, (piece i).contribution :=
+  finite_localized_stokes s.attach piece hpartition
+
 /-- Finite localized Stokes assembly for a family of proof-carrying pieces whose scalar cutoffs are
 the functions of an ambient smooth partition of unity.
 
@@ -448,6 +460,22 @@ theorem finite_localized_stokes_of_smoothPartition {M : SmoothDomain (n + 1)}
   intro y hy
   filter_upwards [M.smoothPartition_compactActive_eventuallyEq_one ρ hy] with z hz
   simpa [hχ] using hz
+
+/-- Finite localized Stokes assembly over the active subtype of an ambient smooth partition of
+unity.  This form is useful for complement-extended covers, where only active non-complement
+indices should carry local Stokes data. -/
+theorem finite_localized_stokes_of_smoothPartition_on_active {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (piece : { i // i ∈ M.compactActiveFinset ρ } → LocalizedStokesPiece M ω)
+    (hχ : ∀ i, (piece i).χ = fun z => ρ i z) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ (M.compactActiveFinset ρ).attach, (piece i).contribution := by
+  refine finite_localized_stokes_on_finset (M.compactActiveFinset ρ) piece ?_
+  intro y hy
+  filter_upwards [M.smoothPartition_compactActive_eventuallyEq_one ρ hy] with z hz
+  simp only [hχ]
+  exact (Finset.sum_attach (M.compactActiveFinset ρ) (fun i => (ρ i) z)).trans hz
 
 /-- Finite assembly of certified localized boundary-box Stokes pieces.
 
@@ -467,6 +495,19 @@ theorem finite_boundary_localized_stokes {M : SmoothDomain (n + 1)}
     finite_localized_stokes s
       (fun i => (piece i).toLocalizedStokesPiece hω) hpartition
 
+/-- Boundary-piece finite assembly over the subtype of a finite index set. -/
+theorem finite_boundary_localized_stokes_on_finset {M : SmoothDomain (n + 1)}
+    {ω : DiffForm (n + 1) n} {ι : Type*} (s : Finset ι)
+    (piece : { i // i ∈ s } → BoundaryLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (hpartition : ∀ y ∈ M.carrier,
+      (fun z => ∑ i ∈ s.attach, (piece i).χ z) =ᶠ[𝓝 y] fun _ => 1) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ s.attach, (piece i).boundaryContribution := by
+  simpa [BoundaryLocalizedStokesPiece.toLocalizedStokesPiece] using
+    finite_localized_stokes_on_finset s
+      (fun i => (piece i).toLocalizedStokesPiece hω) hpartition
+
 /-- Boundary-piece finite assembly using the finite active set of an ambient smooth partition of
 unity. -/
 theorem finite_boundary_localized_stokes_of_smoothPartition {M : SmoothDomain (n + 1)}
@@ -479,6 +520,19 @@ theorem finite_boundary_localized_stokes_of_smoothPartition {M : SmoothDomain (n
       ∑ i ∈ M.compactActiveFinset ρ, (piece i).boundaryContribution := by
   simpa [BoundaryLocalizedStokesPiece.toLocalizedStokesPiece] using
     finite_localized_stokes_of_smoothPartition ρ
+      (fun i => (piece i).toLocalizedStokesPiece hω) hχ
+
+/-- Boundary-piece finite assembly over the active subtype of an ambient smooth partition. -/
+theorem finite_boundary_localized_stokes_of_smoothPartition_on_active
+    {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n} {ι : Type*}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
+    (piece : { i // i ∈ M.compactActiveFinset ρ } → BoundaryLocalizedStokesPiece M ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (hχ : ∀ i, (piece i).χ = fun z => ρ i z) :
+    M.domainIntegral (DiffForm.extd ω) =
+      ∑ i ∈ (M.compactActiveFinset ρ).attach, (piece i).boundaryContribution := by
+  simpa [BoundaryLocalizedStokesPiece.toLocalizedStokesPiece] using
+    finite_localized_stokes_of_smoothPartition_on_active ρ
       (fun i => (piece i).toLocalizedStokesPiece hω) hχ
 
 end SmoothDomain
