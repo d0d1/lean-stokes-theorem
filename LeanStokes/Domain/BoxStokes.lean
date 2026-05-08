@@ -56,7 +56,7 @@ The boundary side is still the existing cubical coordinate-boundary integral; la
 infrastructure can bridge that side to boundary charts under additional hypotheses. -/
 theorem boxStokes_diffForm (ω : DiffForm (n + 1) n)
     (a b : ℝSpace (n + 1)) (hle : a ≤ b)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) =
       CubeStokes.bdryIntegral (CubeStokes.toCoordNForm ω) a b := by
   exact boxStokes_diffForm_of_differentiable ω a b hle
@@ -310,7 +310,7 @@ theorem boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces_of_differentiable
 every boundary face term. -/
 theorem boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces
     (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
-    (hle : a ≤ b) (hω : ContDiff ℝ ⊤ ω)
+    (hle : a ≤ b) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hvanish : VanishesOnBoxBoundaryFaces ω a b) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 :=
   boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces_of_differentiable ω a b hle
@@ -320,7 +320,7 @@ theorem boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces
 formal cubical boundary face. -/
 theorem boxStokes_eq_zero_of_eq_zero_on_boxBoundaryFaces
     (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
-    (hle : a ≤ b) (hω : ContDiff ℝ ⊤ ω)
+    (hle : a ≤ b) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hzero : ∀ x ∈ boxBoundaryFaces a b, ω x = 0) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 :=
   boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces ω a b hle hω
@@ -330,7 +330,7 @@ theorem boxStokes_eq_zero_of_eq_zero_on_boxBoundaryFaces
 formal cubical boundary face. -/
 theorem boxStokes_eq_zero_of_disjoint_support_boxBoundaryFaces
     (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
-    (hle : a ≤ b) (hω : ContDiff ℝ ⊤ ω)
+    (hle : a ≤ b) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hdisj : Disjoint (Function.support ω) (boxBoundaryFaces a b)) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) = 0 :=
   boxStokes_eq_zero_of_vanishesOnBoxBoundaryFaces ω a b hle hω
@@ -407,7 +407,7 @@ pointwise. -/
 theorem halfSpaceBoxStokes_of_vanishesOnArtificialFaces
     (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hvanish : VanishesOnBoxArtificialFaces ω a b) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n ω
@@ -438,7 +438,7 @@ point-set. -/
 theorem halfSpaceBoxStokes_of_eq_zero_on_boxArtificialFaces
     (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hzero : ∀ x ∈ boxArtificialFaces a b, ω x = 0) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n ω
@@ -452,7 +452,7 @@ artificial face point-set. -/
 theorem halfSpaceBoxStokes_of_disjoint_support_boxArtificialFaces
     (ω : DiffForm (n + 1) n) (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hdisj : Disjoint (Function.support ω) (boxArtificialFaces a b)) :
     DiffForm.integral (DiffForm.extd ω) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n ω

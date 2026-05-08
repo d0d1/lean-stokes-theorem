@@ -62,7 +62,7 @@ example : boxIntegral (extDerivCoord myConstForm) (fun _ => 0) (fun _ => 1) =
 
 /-- The Fundamental Theorem of Calculus via Stokes: for f : ℝ¹ → ℝ smooth,
     ∫_[a,b] dω = boundary values. -/
-example (f : (Fin 1 → ℝ) → ℝ) (hf : ContDiff ℝ ⊤ f)
+example (f : (Fin 1 → ℝ) → ℝ) (hf : ContDiff ℝ (⊤ : ℕ∞) f)
     (a b : Fin 1 → ℝ) (hab : a ≤ b) :
     let ω : CoordNForm 0 := fun _ => f
     boxIntegral (extDerivCoord ω) a b = bdryIntegral ω a b := by

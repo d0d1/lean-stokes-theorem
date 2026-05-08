@@ -32,9 +32,9 @@ is smooth, then pointwise evaluation is smooth. -/
 theorem contDiff_multilinearMap_apply_of_contDiff (N : ℕ)
     (f : E → ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G)
     (g : Fin N → E → F)
-    (hf : ContDiff 𝕜 ⊤ f) (hg : ∀ k, ContDiff 𝕜 ⊤ (g k)) :
-    ContDiff 𝕜 ⊤ (fun x => (f x) (fun k => g k x)) := by
-  have happ : ContDiff 𝕜 ⊤
+    (hf : ContDiff 𝕜 (⊤ : ℕ∞) f) (hg : ∀ k, ContDiff 𝕜 (⊤ : ℕ∞) (g k)) :
+    ContDiff 𝕜 (⊤ : ℕ∞) (fun x => (f x) (fun k => g k x)) := by
+  have happ : ContDiff 𝕜 (⊤ : ℕ∞)
       (fun p : ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G × (Fin N → F) =>
         p.1 p.2) := by
     rw [← contDiffOn_univ]

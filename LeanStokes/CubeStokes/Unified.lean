@@ -69,7 +69,7 @@ coefficient smoothness hypothesis needed. -/
 theorem stokes_extDeriv_smooth
     (ω : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
     (a b : Fin (n + 1) → ℝ) (hle : a ≤ b)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     (∫ x in Icc a b, extDeriv ω x (fun j => Pi.single j 1)) =
     bdryIntegral (toCoordNForm ω) a b :=
     stokes_extDeriv ω a b hle (hω.differentiable (by simp)) (toCoordNForm_smooth ω hω)

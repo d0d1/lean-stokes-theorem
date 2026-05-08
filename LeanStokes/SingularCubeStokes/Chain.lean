@@ -101,7 +101,7 @@ the oriented boundary integral of ω equals the interior integral of dω.
 This is the fundamental theorem of exterior calculus for parametrized cubes. -/
 theorem stokes_singular_boundary (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     bdryIntegral_singular σ ω =
     integrateForm σ (fun y => extDeriv ω y) :=
   (singularStokes σ ω hω).symm
@@ -178,7 +178,7 @@ For a smooth singular (n+1)-cube σ and smooth n-form ω, the integral
 over the boundary chain equals the interior integral of dω. -/
 theorem stokes_singular_chain (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     integrateChain (singularBoundarySingle σ) ω =
     integrateForm σ (fun y => extDeriv ω y) := by
   rw [integrateChain_singularBoundarySingle]
@@ -216,7 +216,7 @@ the integral of dω over c. This extends the single-cube Stokes theorem
 by ℤ-linearity. -/
 theorem stokes_chain (c : SingularChain (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     integrateChain (singularBoundary c) ω =
     integrateChain c (fun y => extDeriv ω y) := by
   induction c using Finsupp.induction with

@@ -42,7 +42,7 @@ theorem halfSpaceBoundaryIntegral_pullback_chart_symm_eq_domainSign_mul_localBou
       simpa [e, boundaryChartParam] using hyP.2
     exact (P.contDiffAt_halfSpaceFlatteningChart_symm
       (by simpa [e] using hz) (by simpa [e] using hp)).differentiableAt
-        (by simp : (⊤ : WithTop ℕ∞) ≠ 0)
+        (by simp)
   have hmodel :
       halfSpaceBoundaryIntegral n (DiffForm.pullback e.symm ω) S =
         -DiffForm.integral (DiffForm.pullback (e.symm ∘ halfSpaceBoundaryParam n) ω) S :=

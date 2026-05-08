@@ -42,8 +42,11 @@ theorem extd_extd (ω : DiffForm d n) (hω : IsSmooth ω) :
     extd (extd ω) = 0 := by
   unfold extd IsSmooth at *
   funext x
-  have h : ContDiffAt ℝ ⊤ ω x := hω.contDiffAt
-  exact _root_.extDeriv_extDeriv_apply h le_top
+  have h : ContDiffAt ℝ (⊤ : ℕ∞) ω x := hω.contDiffAt
+  exact _root_.extDeriv_extDeriv_apply h (by
+    simpa [minSmoothness_of_isRCLikeNormedField] using
+      (WithTop.coe_le_coe.mpr (le_top : (2 : ℕ∞) ≤ ⊤) :
+        (↑(2 : ℕ∞) : WithTop ℕ∞) ≤ (↑(⊤ : ℕ∞) : WithTop ℕ∞)))
 
 /-- Linearity: d(ω₁ + ω₂) = dω₁ + dω₂ for differentiable forms. -/
 theorem extd_add (ω₁ ω₂ : DiffForm d n)
@@ -100,19 +103,22 @@ theorem extd_congr_on_of_eventuallyEq {ω₁ ω₂ : DiffForm d n} {S : Set (ℝ
 theorem extd_pullback_apply {m : ℕ} (f : ℝSpace m → ℝSpace d) (ω : DiffForm d n)
     (x : ℝSpace m)
     (hω : DifferentiableAt ℝ ω (f x))
-    (hf : ContDiffAt ℝ ⊤ f x) :
+    (hf : ContDiffAt ℝ (⊤ : ℕ∞) f x) :
     extd (pullback f ω) x = pullback f (extd ω) x := by
   unfold extd pullback
-  exact _root_.extDeriv_pullback hω hf (by simp)
+  exact _root_.extDeriv_pullback hω hf (by
+    simpa [minSmoothness_of_isRCLikeNormedField] using
+      (WithTop.coe_le_coe.mpr (le_top : (2 : ℕ∞) ≤ ⊤) :
+        (↑(2 : ℕ∞) : WithTop ℕ∞) ≤ (↑(⊤ : ℕ∞) : WithTop ℕ∞)))
 
 /-- The exterior derivative commutes with smooth pullback. -/
 theorem extd_pullback {m : ℕ} (f : ℝSpace m → ℝSpace d) (ω : DiffForm d n)
-    (hω : ContDiff ℝ ⊤ ω)
-    (hf : ContDiff ℝ ⊤ f) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) :
     extd (pullback f ω) = pullback f (extd ω) := by
   funext x
   exact extd_pullback_apply f ω x
-    ((hω.differentiable (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt)
+    ((hω.differentiable (by simp)).differentiableAt)
     hf.contDiffAt
 
 end DiffForm

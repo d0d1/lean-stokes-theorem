@@ -53,7 +53,7 @@ structure BoundaryLocalizedStokesPiece (M : SmoothDomain (n + 1))
   flattening_image_eq_box : M.halfSpaceFlatteningMap P.i '' U = Icc a b
   box_le : a ≤ b
   box_zero_low : a (0 : Fin (n + 1)) = 0
-  scalar_smooth : ContDiff ℝ ⊤ χ
+  scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ
   localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
   localized_extd_integrable :
     IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
@@ -91,7 +91,7 @@ def chartBox (Q : BoundaryLocalizedStokesPiece M ω) : BoundaryChartBox M where
 
 /-- Build a localized boundary Stokes piece from pure chart-box geometry and scalar/form data. -/
 def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
-    (scalar_smooth : ContDiff ℝ ⊤ χ)
+    (scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
     (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
     (localized_extd_integrable :
       IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
@@ -129,6 +129,78 @@ def ofChartBox (G : BoundaryChartBox M) (χ : ℝSpace (n + 1) → ℝ)
   scalar_support_disjoint_artificial := scalar_support_disjoint_artificial
   scalar_eventually_zero_off_U_in_carrier := scalar_eventually_zero_off_U_in_carrier
 
+/-- Build a localized boundary piece from chart-box geometry and a smooth partition cutoff whose
+topological support lies in the chart-box set.
+
+This derives only scalar smoothness, localized differentiability, and off-box eventual-zero fields;
+model-pullback regularity, integrability, and artificial-face support disjointness remain explicit
+hypotheses. -/
+def ofChartBoxSmoothPartitionOfTSupportSubset {ι : Type*} {s : Set (ℝSpace (n + 1))}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
+    (i : ι) (G : BoundaryChartBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (htsupport : tsupport (fun z => ρ i z) ⊆ G.U)
+    (localized_extd_integrable :
+      IntegrableOn
+        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
+        M.carrier volume)
+    (model_pullback_differentiable :
+      Differentiable ℝ
+        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
+          (DiffForm.fsmul (fun z => ρ i z) ω)))
+    (model_coord_smooth :
+      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
+        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
+          (DiffForm.fsmul (fun z => ρ i z) ω))))
+    (scalar_support_disjoint_artificial :
+      Disjoint
+        (Function.support ((fun z => ρ i z) ∘
+          (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
+        (CubeStokes.boxArtificialFaces G.a G.b)) :
+    BoundaryLocalizedStokesPiece M ω :=
+  ofChartBox G (fun z => ρ i z)
+    (ρ.contDiff_apply_infty i)
+    ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
+    localized_extd_integrable
+    model_pullback_differentiable
+    model_coord_smooth
+    scalar_support_disjoint_artificial
+    (fun y _ hyU =>
+      eventuallyEq_zero_of_tsupport_subset_of_notMem (f := fun z => ρ i z) htsupport hyU)
+
+/-- Build a localized boundary piece from chart-box geometry and a smooth partition cutoff
+subordinate to a cover member contained in the chart-box set.
+
+This is a bridge for already box-refined covers; it does not construct such a refinement. -/
+def ofChartBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
+    (Ucov : ι → Set (ℝSpace (n + 1))) (hρU : ρ.IsSubordinate Ucov)
+    (i : ι) (G : BoundaryChartBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (hUsub : Ucov i ⊆ G.U)
+    (localized_extd_integrable :
+      IntegrableOn
+        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
+        M.carrier volume)
+    (model_pullback_differentiable :
+      Differentiable ℝ
+        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
+          (DiffForm.fsmul (fun z => ρ i z) ω)))
+    (model_coord_smooth :
+      CubeStokes.IsSmooth (CubeStokes.toCoordNForm
+        (DiffForm.pullback (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm
+          (DiffForm.fsmul (fun z => ρ i z) ω))))
+    (scalar_support_disjoint_artificial :
+      Disjoint
+        (Function.support ((fun z => ρ i z) ∘
+          (M.halfSpaceFlatteningChart G.P.i G.x G.P.h).symm))
+        (CubeStokes.boxArtificialFaces G.a G.b)) :
+    BoundaryLocalizedStokesPiece M ω :=
+  ofChartBoxSmoothPartitionOfTSupportSubset ρ i G hω
+    (by simpa using (hρU i).trans hUsub)
+    localized_extd_integrable
+    model_pullback_differentiable
+    model_coord_smooth
+    scalar_support_disjoint_artificial
+
 /-- Boundary-coordinate tail of the model half-space box for a localized piece. -/
 def boundaryTail (Q : BoundaryLocalizedStokesPiece M ω) : Set (ℝSpace n) :=
   Icc (Q.a ∘ Fin.succAbove (0 : Fin (n + 1)))
@@ -147,7 +219,7 @@ def boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω) : ℝ :=
 
 /-- Carrier integral of a boundary localized piece equals its patch-local boundary contribution. -/
 theorem carrierIntegral_eq_boundaryContribution (Q : BoundaryLocalizedStokesPiece M ω)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
       Q.boundaryContribution := by
   have hrestrict :
@@ -194,7 +266,7 @@ variable {M : SmoothDomain (n + 1)} {ω : DiffForm (n + 1) n}
 
 /-- View a boundary localized Stokes piece as a generic proof-carrying localized contribution. -/
 def toLocalizedStokesPiece (Q : BoundaryLocalizedStokesPiece M ω)
-    (hω : ContDiff ℝ ⊤ ω) : LocalizedStokesPiece M ω where
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) : LocalizedStokesPiece M ω where
   χ := Q.χ
   localized_differentiable := Q.localized_differentiable
   localized_extd_integrable := Q.localized_extd_integrable
@@ -217,7 +289,7 @@ structure InteriorLocalizedStokesPiece (M : SmoothDomain (n + 1))
   b : ℝSpace (n + 1)
   box_le : a ≤ b
   box_subset_carrier : Icc a b ⊆ M.carrier
-  scalar_smooth : ContDiff ℝ ⊤ χ
+  scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ
   localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω)
   localized_extd_integrable :
     IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume
@@ -239,7 +311,7 @@ def interiorBox (Q : InteriorLocalizedStokesPiece M ω) : InteriorBox M where
 
 /-- Build a localized interior Stokes piece from pure interior-box geometry and scalar/form data. -/
 def ofInteriorBox (G : InteriorBox M) (χ : ℝSpace (n + 1) → ℝ)
-    (scalar_smooth : ContDiff ℝ ⊤ χ)
+    (scalar_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
     (localized_differentiable : Differentiable ℝ (DiffForm.fsmul χ ω))
     (localized_extd_integrable :
       IntegrableOn (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul χ ω))) M.carrier volume)
@@ -259,9 +331,52 @@ def ofInteriorBox (G : InteriorBox M) (χ : ℝSpace (n + 1) → ℝ)
   scalar_support_disjoint_boundary := scalar_support_disjoint_boundary
   scalar_eventually_zero_off_box_in_carrier := scalar_eventually_zero_off_box_in_carrier
 
+/-- Build a localized interior piece from interior-box geometry and a smooth partition cutoff whose
+topological support lies in the box and avoids the cubical boundary faces.
+
+This derives scalar smoothness, localized differentiability, support-disjointness from the formal
+box faces, and eventual zero off the box.  Integrability remains an explicit analytic hypothesis. -/
+def ofInteriorBoxSmoothPartitionOfTSupport {ι : Type*} {s : Set (ℝSpace (n + 1))}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
+    (i : ι) (G : InteriorBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (htsupport_box : tsupport (fun z => ρ i z) ⊆ Icc G.a G.b)
+    (htsupport_disjoint_boundary :
+      Disjoint (tsupport (fun z => ρ i z)) (CubeStokes.boxBoundaryFaces G.a G.b))
+    (localized_extd_integrable :
+      IntegrableOn
+        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
+        M.carrier volume) :
+    InteriorLocalizedStokesPiece M ω :=
+  ofInteriorBox G (fun z => ρ i z)
+    (ρ.contDiff_apply_infty i)
+    ((DiffForm.isSmooth_fsmul (ρ.contDiff_apply_infty i) hω).differentiable (by simp))
+    localized_extd_integrable
+    (htsupport_disjoint_boundary.mono_left (subset_tsupport (fun z => ρ i z)))
+    (fun y _ hybox =>
+      eventuallyEq_zero_of_tsupport_subset_of_notMem
+        (f := fun z => ρ i z) htsupport_box hybox)
+
+/-- Build a localized interior piece from interior-box geometry and a smooth partition cutoff
+subordinate to a cover member contained in the box and disjoint from its formal boundary faces. -/
+def ofInteriorBoxSmoothPartition {ι : Type*} {s : Set (ℝSpace (n + 1))}
+    (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) s)
+    (Ucov : ι → Set (ℝSpace (n + 1))) (hρU : ρ.IsSubordinate Ucov)
+    (i : ι) (G : InteriorBox M) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
+    (hUsub : Ucov i ⊆ Icc G.a G.b)
+    (hUdisj : Disjoint (Ucov i) (CubeStokes.boxBoundaryFaces G.a G.b))
+    (localized_extd_integrable :
+      IntegrableOn
+        (DiffForm.topCoeff (DiffForm.extd (DiffForm.fsmul (fun z => ρ i z) ω)))
+        M.carrier volume) :
+    InteriorLocalizedStokesPiece M ω :=
+  ofInteriorBoxSmoothPartitionOfTSupport ρ i G hω
+    (by simpa using (hρU i).trans hUsub)
+    (by simpa using hUdisj.mono_left (hρU i))
+    localized_extd_integrable
+
 /-- Carrier integral of an interior localized piece is zero. -/
 theorem carrierIntegral_eq_zero (Q : InteriorLocalizedStokesPiece M ω)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier = 0 := by
   have hrestrict :
       DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) M.carrier =
@@ -269,7 +384,7 @@ theorem carrierIntegral_eq_zero (Q : InteriorLocalizedStokesPiece M ω)
     DiffForm.integral_extd_fsmul_eq_integral_extd_fsmul_of_subset_of_left_eventuallyEq_zero_off
       Q.χ ω M.measurableSet_carrier measurableSet_Icc Q.box_subset_carrier
       Q.scalar_eventually_zero_off_box_in_carrier
-  have hχω : ContDiff ℝ ⊤ (DiffForm.fsmul Q.χ ω) :=
+  have hχω : ContDiff ℝ (⊤ : ℕ∞) (DiffForm.fsmul Q.χ ω) :=
     DiffForm.isSmooth_fsmul Q.scalar_smooth hω
   have hdisj_form :
       Disjoint (Function.support (DiffForm.fsmul Q.χ ω))
@@ -283,7 +398,7 @@ theorem carrierIntegral_eq_zero (Q : InteriorLocalizedStokesPiece M ω)
 
 /-- View an interior localized Stokes piece as a generic proof-carrying localized contribution. -/
 def toLocalizedStokesPiece (Q : InteriorLocalizedStokesPiece M ω)
-    (hω : ContDiff ℝ ⊤ ω) : LocalizedStokesPiece M ω where
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) : LocalizedStokesPiece M ω where
   χ := Q.χ
   localized_differentiable := Q.localized_differentiable
   localized_extd_integrable := Q.localized_extd_integrable
@@ -343,7 +458,7 @@ statement. -/
 theorem finite_boundary_localized_stokes {M : SmoothDomain (n + 1)}
     {ω : DiffForm (n + 1) n} {ι : Type*} (s : Finset ι)
     (piece : ι → BoundaryLocalizedStokesPiece M ω)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hpartition : ∀ y ∈ M.carrier,
       (fun z => ∑ i ∈ s, (piece i).χ z) =ᶠ[𝓝 y] fun _ => 1) :
     M.domainIntegral (DiffForm.extd ω) =
@@ -358,7 +473,7 @@ theorem finite_boundary_localized_stokes_of_smoothPartition {M : SmoothDomain (n
     {ω : DiffForm (n + 1) n} {ι : Type*}
     (ρ : SmoothPartitionOfUnity ι (𝓘(ℝ, ℝSpace (n + 1))) (ℝSpace (n + 1)) univ)
     (piece : ι → BoundaryLocalizedStokesPiece M ω)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hχ : ∀ i, (piece i).χ = fun z => ρ i z) :
     M.domainIntegral (DiffForm.extd ω) =
       ∑ i ∈ M.compactActiveFinset ρ, (piece i).boundaryContribution := by

@@ -51,7 +51,7 @@ For a smooth vector field `F` and a box `[a, b]` with `a ≤ b`:
 expressed via the boundary integral of the signed component form. -/
 theorem divergence_stokes (F : (Fin (n + 1) → ℝ) → Fin (n + 1) → ℝ)
     (a b : Fin (n + 1) → ℝ) (hab : a ≤ b)
-    (hF : ∀ i, ContDiff ℝ ⊤ (fun x => F x i)) :
+    (hF : ∀ i, ContDiff ℝ (⊤ : ℕ∞) (fun x => F x i)) :
     (∫ x in Icc a b, divergence F x) =
     bdryIntegral (fun i y => (-1 : ℝ) ^ (i : ℕ) * F y i) a b := by
   set ω : CoordNForm n := fun i y => (-1 : ℝ) ^ (i : ℕ) * F y i

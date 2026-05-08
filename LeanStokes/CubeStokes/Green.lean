@@ -46,7 +46,7 @@ Given smooth `Q, P : ℝ² → ℝ` and a rectangle with `a ≤ b`:
 where `ω = ![Q, P]` is the coordinate 1-form with `ω₀ = Q`, `ω₁ = P`.
 The sign convention gives `dω = ∂Q/∂x - ∂P/∂y` matching the classical Green formula. -/
 theorem green_stokes (Q P : (Fin 2 → ℝ) → ℝ) (a b : Fin 2 → ℝ) (hab : a ≤ b)
-    (hQ : ContDiff ℝ ⊤ Q) (hP : ContDiff ℝ ⊤ P) :
+    (hQ : ContDiff ℝ (⊤ : ℕ∞) Q) (hP : ContDiff ℝ (⊤ : ℕ∞) P) :
     (∫ x in Icc a b, partialDeriv Q 0 x - partialDeriv P 1 x) =
     bdryIntegral ![Q, P] a b := by
   set ω : CoordNForm 1 := ![Q, P] with hω_def
@@ -83,7 +83,7 @@ The double integral equals the sum of four oriented edge contributions:
 - Top edge: `-∫ P(x, b₁) dx` over `x ∈ [a₀, b₀]`
 - Bottom edge: `+∫ P(x, a₁) dx` over `x ∈ [a₀, b₀]` -/
 theorem green_four_edges (Q P : (Fin 2 → ℝ) → ℝ) (a b : Fin 2 → ℝ) (hab : a ≤ b)
-    (hQ : ContDiff ℝ ⊤ Q) (hP : ContDiff ℝ ⊤ P) :
+    (hQ : ContDiff ℝ (⊤ : ℕ∞) Q) (hP : ContDiff ℝ (⊤ : ℕ∞) P) :
     (∫ x in Icc a b, partialDeriv Q 0 x - partialDeriv P 1 x) =
     (∫ y : Fin 1 → ℝ in Icc (a ∘ Fin.succAbove (0 : Fin 2)) (b ∘ Fin.succAbove (0 : Fin 2)),
       Q (Fin.insertNth (0 : Fin 2) (b 0) y)) -

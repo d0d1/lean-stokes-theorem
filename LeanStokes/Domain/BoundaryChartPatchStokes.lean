@@ -33,13 +33,13 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differenti
     (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hmodel_diff :
       Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
     (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
       (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω)))
     (hdiffBox : ∀ z ∈ Icc a b,
-      ContDiffAt ℝ ⊤ (M.halfSpaceFlatteningChart P.i x P.h).symm z)
+      ContDiffAt ℝ (⊤ : ℕ∞) (M.halfSpaceFlatteningChart P.i x P.h).symm z)
     (hvanish : CubeStokes.VanishesOnBoxArtificialFaces
       (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω) a b)
     (hSsub :
@@ -63,7 +63,7 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differenti
       (DiffForm.extd (DiffForm.pullback e.symm ω)) measurableSet_Icc
       (fun z hz =>
         (DiffForm.extd_pullback_apply e.symm ω z
-          ((hω.differentiable (by simp : (⊤ : WithTop ℕ∞) ≠ 0)) (e.symm z))
+          ((hω.differentiable (by simp)) (e.symm z))
           (by simpa [e] using hdiffBox z hz)).symm)
   have hbox :
       DiffForm.integral (DiffForm.extd (DiffForm.pullback e.symm ω)) (Icc a b) =
@@ -89,7 +89,7 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_
     (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hmodel_diff :
       Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
     (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
@@ -107,7 +107,7 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_
              (b ∘ Fin.succAbove (0 : Fin (n + 1))))
         (P.tailBox_subset_localCoordDomain_of_model_box_subset a b hle ha0 hboxsub) := by
   let e := M.halfSpaceFlatteningChart P.i x P.h
-  have hdiffBox : ∀ z ∈ Icc a b, ContDiffAt ℝ ⊤ e.symm z := by
+  have hdiffBox : ∀ z ∈ Icc a b, ContDiffAt ℝ (⊤ : ℕ∞) e.symm z := by
     intro z hz
     have hzpatch := hboxsub hz
     exact P.contDiffAt_halfSpaceFlatteningChart_symm
@@ -129,7 +129,7 @@ theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
     (hUmeas : MeasurableSet U) (hUsub : U ⊆ P.U)
     (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b)
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hmodel_diff :
       Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
     (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
@@ -173,7 +173,7 @@ theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
         have hsymmdiff : DifferentiableAt ℝ e.symm (F y) :=
           (P.contDiffAt_halfSpaceFlatteningChart_symm
             (by simpa [F, e] using htarget) (by simpa [F, e] using hsymmU)
-          ).differentiableAt (by simp : (⊤ : WithTop ℕ∞) ≠ 0)
+          ).differentiableAt (by simp)
         have hFdiff : DifferentiableAt ℝ F y := by
           simpa [F] using M.differentiableAt_halfSpaceFlatteningMap P.i y
         have hcomp :
@@ -221,7 +221,7 @@ theorem integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_mode
     (hUmeas : MeasurableSet U) (hUsub : U ⊆ P.U)
     (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b)
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hχ : ContDiff ℝ ⊤ χ) (hω : ContDiff ℝ ⊤ ω)
+    (hχ : ContDiff ℝ (⊤ : ℕ∞) χ) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hmodel_diff :
       Differentiable ℝ
         (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm (DiffForm.fsmul χ ω)))
@@ -237,7 +237,7 @@ theorem integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_mode
              (b ∘ Fin.succAbove (0 : Fin (n + 1))))
         (P.tailBox_subset_localCoordDomain_of_flattening_image_eq a b hle ha0 hUsub himage) := by
   let e := M.halfSpaceFlatteningChart P.i x P.h
-  have hχω : ContDiff ℝ ⊤ (DiffForm.fsmul χ ω) :=
+  have hχω : ContDiff ℝ (⊤ : ℕ∞) (DiffForm.fsmul χ ω) :=
     DiffForm.isSmooth_fsmul hχ hω
   have hdisj_form :
       Disjoint

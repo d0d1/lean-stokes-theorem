@@ -87,7 +87,7 @@ def bdryIntegral (ω : CoordNForm n) (a b : Fin (n + 1) → ℝ) : ℝ :=
 
 /-- A coordinate `n`-form is smooth if each coefficient function is smooth. -/
 def IsSmooth (ω : CoordNForm n) : Prop :=
-  ∀ i : Fin (n + 1), ContDiff ℝ ⊤ (ω i)
+  ∀ i : Fin (n + 1), ContDiff ℝ (⊤ : ℕ∞) (ω i)
 
 /-- A coordinate `n`-form is continuous on a set if each coefficient is. -/
 def IsContinuousOn (ω : CoordNForm n) (s : Set (Fin (n + 1) → ℝ)) : Prop :=

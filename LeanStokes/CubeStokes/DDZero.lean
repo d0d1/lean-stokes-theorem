@@ -33,15 +33,18 @@ variable {n : ℕ}
 This is `extDeriv_extDeriv` from mathlib, restated for our setting. -/
 theorem dd_zero_abstract
     (ω : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     extDeriv (extDeriv ω) = 0 :=
-  extDeriv_extDeriv hω (by simp)
+  extDeriv_extDeriv hω (by
+    simpa [minSmoothness_of_isRCLikeNormedField] using
+      (WithTop.coe_le_coe.mpr (le_top : (2 : ℕ∞) ≤ ⊤) :
+        (↑(2 : ℕ∞) : WithTop ℕ∞) ≤ (↑(⊤ : ℕ∞) : WithTop ℕ∞)))
 
 /-- **d² = 0** (coordinate consequence): Evaluating `extDeriv(extDeriv ω)` on any
 tuple of vectors gives zero. In particular, the top-form coefficient is zero. -/
 theorem dd_zero_coord_top
     (ω : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (x : Fin (n + 1) → ℝ) (v : Fin (n + 1 + 1) → Fin (n + 1) → ℝ) :
     extDeriv (extDeriv ω) x v = 0 := by
   rw [dd_zero_abstract ω hω]
@@ -52,7 +55,7 @@ theorem dd_zero_coord_top
 consequence: the boundary integral of an exact form's derivative vanishes. -/
 theorem stokes_dd_zero
     (ω : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω)
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (a b : Fin (n + 1) → ℝ)
     (v : Fin (n + 1 + 1) → Fin (n + 1) → ℝ) :
     (∫ x in Icc a b, extDeriv (extDeriv ω) x v) = 0 := by

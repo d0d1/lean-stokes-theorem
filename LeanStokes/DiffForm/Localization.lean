@@ -145,7 +145,7 @@ theorem continuous_fsmul {f : ℝSpace d → ℝ} {ω : DiffForm d n}
 
 /-- Pointwise scalar multiplication by a smooth scalar function preserves smoothness of forms. -/
 theorem isSmooth_fsmul {f : ℝSpace d → ℝ} {ω : DiffForm d n}
-    (hf : ContDiff ℝ ⊤ f) (hω : IsSmooth ω) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : IsSmooth ω) :
     IsSmooth (fsmul f ω) := by
   simpa [IsSmooth, fsmul] using hf.smul hω
 

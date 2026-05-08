@@ -46,24 +46,24 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 theorem contDiff_multilinearMap_apply_of_contDiff (N : ℕ)
     (f : E → ContinuousMultilinearMap 𝕜 (fun _ : Fin N => F) G)
     (g : Fin N → E → F)
-    (hf : ContDiff 𝕜 ⊤ f) (hg : ∀ k, ContDiff 𝕜 ⊤ (g k)) :
-    ContDiff 𝕜 ⊤ (fun x => (f x) (fun k => g k x)) :=
+    (hf : ContDiff 𝕜 (⊤ : ℕ∞) f) (hg : ∀ k, ContDiff 𝕜 (⊤ : ℕ∞) (g k)) :
+    ContDiff 𝕜 (⊤ : ℕ∞) (fun x => (f x) (fun k => g k x)) :=
   DiffForm.contDiff_multilinearMap_apply_of_contDiff N f g hf hg
 
 /-- The pullback form is differentiable: if ω is differentiable and σ is C^∞,
 then `pullbackForm σ ω` is differentiable as a ContinuousAlternatingMap-valued function. -/
 theorem pullbackForm_differentiable {n : ℕ} (σ : SmoothSingularCube d m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     Differentiable ℝ (pullbackForm σ ω) := by
   intro x
   unfold pullbackForm
   apply DifferentiableAt.continuousAlternatingMapCompContinuousLinearMap
   · exact ((hω.comp σ.smooth).differentiable
-      (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
-  · have hfderiv : ContDiff ℝ ⊤ (fderiv ℝ σ.toFun) :=
-      σ.smooth.fderiv_right (by simp : (⊤ : WithTop ℕ∞) + 1 ≤ ⊤)
-    exact (hfderiv.differentiable (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
+      (by simp)).differentiableAt
+  · have hfderiv : ContDiff ℝ (⊤ : ℕ∞) (fderiv ℝ σ.toFun) :=
+      σ.smooth.fderiv_right (by simp)
+    exact (hfderiv.differentiable (by simp)).differentiableAt
 
 /-- Each coordinate coefficient of the pullback form is smooth.
 
@@ -72,13 +72,13 @@ This is proved using `contDiff_multilinearMap_apply_of_contDiff` by converting
 the alternating map to a multilinear map and verifying smoothness of all components. -/
 theorem toCoordNForm_pullback_isSmooth {n : ℕ} (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     CubeStokes.IsSmooth (CubeStokes.toCoordNForm (pullbackForm σ ω)) := by
   intro i
   -- The i-th coefficient is:
   -- fun x => (pullbackForm σ ω x)(fun k => Pi.single (Fin.succAbove i k) 1)
   -- = fun x => ω(σ x)(fun k => fderiv ℝ σ x (Pi.single (Fin.succAbove i k) 1))
-  change ContDiff ℝ ⊤ (fun x =>
+  change ContDiff ℝ (⊤ : ℕ∞) (fun x =>
     (ω (σ.toFun x)) (fun k => fderiv ℝ σ.toFun x (Pi.single (Fin.succAbove i k) 1)))
   -- Convert to multilinear map evaluation
   have h_eq : (fun x => (ω (σ.toFun x)) (fun k =>
@@ -95,8 +95,8 @@ theorem toCoordNForm_pullback_isSmooth {n : ℕ} (σ : SmoothSingularCube (n + 1
       ).contDiff.comp (hω.comp σ.smooth)
   · -- Each gₖ(x) = fderiv ℝ σ x (eₖ) is C^∞
     intro k
-    have hfderiv : ContDiff ℝ ⊤ (fderiv ℝ σ.toFun) :=
-      σ.smooth.fderiv_right (by simp : (⊤ : WithTop ℕ∞) + 1 ≤ ⊤)
+    have hfderiv : ContDiff ℝ (⊤ : ℕ∞) (fderiv ℝ σ.toFun) :=
+      σ.smooth.fderiv_right (by simp)
     exact hfderiv.clm_apply contDiff_const
 
 end SingularCubeStokes

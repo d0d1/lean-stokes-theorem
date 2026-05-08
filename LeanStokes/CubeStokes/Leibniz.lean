@@ -36,10 +36,10 @@ def scalarMul (f : (Fin (n+1) → ℝ) → ℝ) (ω : CoordNForm n) : CoordNForm
 
 /-- scalarMul preserves smoothness when both f and ω are smooth. -/
 theorem scalarMul_smooth {f : (Fin (n+1) → ℝ) → ℝ} {ω : CoordNForm n}
-    (hf : ContDiff ℝ ⊤ f) (hω : IsSmooth ω) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : IsSmooth ω) :
     IsSmooth (scalarMul f ω) := by
   intro i
-  have : ContDiff ℝ ⊤ (fun x => f x * ω i x) := hf.mul (hω i)
+  have : ContDiff ℝ (⊤ : ℕ∞) (fun x => f x * ω i x) := hf.mul (hω i)
   exact this
 
 /-- The exterior derivative of a scalar product satisfies the Leibniz rule.
@@ -49,7 +49,7 @@ For smooth f and smooth ω:
 This is the product rule d(f·ω) = df∧ω + f·dω in coordinates. -/
 theorem extDerivCoord_scalarMul
     {f : (Fin (n+1) → ℝ) → ℝ} {ω : CoordNForm n}
-    (hf : ContDiff ℝ ⊤ f) (hω : IsSmooth ω) (x : Fin (n+1) → ℝ) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : IsSmooth ω) (x : Fin (n+1) → ℝ) :
     extDerivCoord (scalarMul f ω) x =
     ∑ i : Fin (n+1), (-1 : ℝ) ^ (i : ℕ) *
       ((fderiv ℝ f x) (Pi.single i 1) * ω i x +
@@ -73,7 +73,7 @@ theorem extDerivCoord_scalarMul
 The gradient term is ∑ᵢ (-1)ⁱ · (∂f/∂xᵢ) · ω(i). -/
 theorem extDerivCoord_scalarMul_split
     {f : (Fin (n+1) → ℝ) → ℝ} {ω : CoordNForm n}
-    (hf : ContDiff ℝ ⊤ f) (hω : IsSmooth ω) (x : Fin (n+1) → ℝ) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : IsSmooth ω) (x : Fin (n+1) → ℝ) :
     extDerivCoord (scalarMul f ω) x =
     f x * extDerivCoord ω x +
     ∑ i : Fin (n+1), (-1 : ℝ) ^ (i : ℕ) *

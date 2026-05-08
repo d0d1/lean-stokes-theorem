@@ -79,17 +79,17 @@ theorem pullback_comp
 /-- Pullback of a smooth differential form along a smooth map is differentiable as an
 alternating-map-valued function. -/
 theorem pullback_differentiable (f : ℝSpace n → ℝSpace m) (η : DiffForm m k)
-    (hf : ContDiff ℝ ⊤ f) (hη : ContDiff ℝ ⊤ η) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hη : ContDiff ℝ (⊤ : ℕ∞) η) :
     Differentiable ℝ (pullback f η) := by
   intro x
   unfold pullback
   apply DifferentiableAt.continuousAlternatingMapCompContinuousLinearMap
   · exact ((hη.comp hf).differentiable
-      (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
-  · have hfderiv : ContDiff ℝ ⊤ (fderiv ℝ f) :=
-      hf.fderiv_right (by simp : (⊤ : WithTop ℕ∞) + 1 ≤ ⊤)
+      (by simp)).differentiableAt
+  · have hfderiv : ContDiff ℝ (⊤ : ℕ∞) (fderiv ℝ f) :=
+      hf.fderiv_right (by simp)
     exact (hfderiv.differentiable
-      (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
+      (by simp)).differentiableAt
 
 end DiffForm
 

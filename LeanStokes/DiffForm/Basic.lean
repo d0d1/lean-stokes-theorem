@@ -40,13 +40,13 @@ namespace DiffForm
 
 variable {d n : ℕ}
 
-/-- A form is smooth if it is `ContDiff ℝ ⊤`. -/
+/-- A form is smooth if it is `ContDiff ℝ (⊤ : ℕ∞)`. -/
 def IsSmooth (ω : DiffForm d n) : Prop :=
-  ContDiff ℝ ⊤ ω
+  ContDiff ℝ (⊤ : ℕ∞) ω
 
 /-- A form is smooth on a set `s`. -/
 def IsSmoothOn (ω : DiffForm d n) (s : Set (ℝSpace d)) : Prop :=
-  ContDiffOn ℝ ⊤ ω s
+  ContDiffOn ℝ (⊤ : ℕ∞) ω s
 
 /-- A differential form has compact support. -/
 def HasCompactSupport (ω : DiffForm d n) : Prop :=

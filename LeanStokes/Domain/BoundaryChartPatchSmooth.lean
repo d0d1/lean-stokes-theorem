@@ -27,7 +27,7 @@ theorem contDiffAt_halfSpaceFlatteningChart_symm (P : BoundaryChartPatch M x)
     {z : ℝSpace (n + 1)}
     (hz : z ∈ (M.halfSpaceFlatteningChart P.i x P.h).target)
     (hp : (M.halfSpaceFlatteningChart P.i x P.h).symm z ∈ P.U) :
-    ContDiffAt ℝ ⊤ (M.halfSpaceFlatteningChart P.i x P.h).symm z := by
+    ContDiffAt ℝ (⊤ : ℕ∞) (M.halfSpaceFlatteningChart P.i x P.h).symm z := by
   let e := M.halfSpaceFlatteningChart P.i x P.h
   let p : ℝSpace (n + 1) := e.symm z
   let L : ℝSpace (n + 1) ≃L[ℝ] ℝSpace (n + 1) :=
@@ -39,7 +39,7 @@ theorem contDiffAt_halfSpaceFlatteningChart_symm (P : BoundaryChartPatch M x)
     exact M.hasFDerivAt_halfSpaceFlatteningMap P.i p
   have hderiv : HasFDerivAt e (L : ℝSpace (n + 1) →L[ℝ] ℝSpace (n + 1)) (e.symm z) := by
     simpa [e, p, L] using hderiv0
-  have hsmooth : ContDiffAt ℝ ⊤ e (e.symm z) := by
+  have hsmooth : ContDiffAt ℝ (⊤ : ℕ∞) e (e.symm z) := by
     simpa [e] using (M.contDiff_halfSpaceFlatteningMap P.i).contDiffAt
   exact e.contDiffAt_symm (by simpa [e] using hz) hderiv hsmooth
 
@@ -47,7 +47,7 @@ theorem contDiffAt_halfSpaceFlatteningChart_symm (P : BoundaryChartPatch M x)
 coordinate whose parametrized point lies in the certified patch neighborhood. -/
 theorem contDiffAt_boundaryChartParam (P : BoundaryChartPatch M x)
     {y : ℝSpace n} (hy : y ∈ P.localCoordDomain) :
-    ContDiffAt ℝ ⊤ (boundaryChartParam M P.i x P.h) y := by
+    ContDiffAt ℝ (⊤ : ℕ∞) (boundaryChartParam M P.i x P.h) y := by
   let e := M.halfSpaceFlatteningChart P.i x P.h
   let z : ℝSpace (n + 1) := halfSpaceBoundaryParam n y
   let p : ℝSpace (n + 1) := boundaryChartParam M P.i x P.h y
@@ -57,11 +57,11 @@ theorem contDiffAt_boundaryChartParam (P : BoundaryChartPatch M x)
     simpa [p] using hy.2
   have hp_eq : p = e.symm z := by
     simp [p, z, e, boundaryChartParam]
-  have hsymm : ContDiffAt ℝ ⊤ e.symm z :=
+  have hsymm : ContDiffAt ℝ (⊤ : ℕ∞) e.symm z :=
     P.contDiffAt_halfSpaceFlatteningChart_symm (by simpa [e] using hz) (by
       rw [← hp_eq]
       exact hp)
-  have hparam : ContDiffAt ℝ ⊤
+  have hparam : ContDiffAt ℝ (⊤ : ℕ∞)
       (halfSpaceBoundaryParam n : ℝSpace n → ℝSpace (n + 1)) y :=
     (halfSpaceBoundaryParam n).contDiff.contDiffAt
   simpa [boundaryChartParam, e] using hsymm.comp y hparam

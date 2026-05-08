@@ -90,18 +90,18 @@ theorem mem_int_iff_halfSpaceFlatteningMap_mem [NeZero d] (i : Fin d) (x : ℝSp
 
 /-- The coordinate replacement map is smooth. -/
 theorem contDiff_flatteningMap (i : Fin d) :
-    ContDiff ℝ ⊤ (M.flatteningMap i) := by
+    ContDiff ℝ (⊤ : ℕ∞) (M.flatteningMap i) := by
   apply contDiff_pi'
   intro j
   by_cases hji : j = i
   · subst j
     simpa [flatteningMap] using M.smooth_φ.neg
   · simpa [flatteningMap, hji] using
-      ((contDiff_apply ℝ ℝ j) : ContDiff ℝ ⊤ fun x : ℝSpace d => x j)
+      ((contDiff_apply ℝ ℝ j) : ContDiff ℝ (⊤ : ℕ∞) fun x : ℝSpace d => x j)
 
 /-- The first-coordinate-facing flattening map is smooth. -/
 theorem contDiff_halfSpaceFlatteningMap [NeZero d] (i : Fin d) :
-    ContDiff ℝ ⊤ (M.halfSpaceFlatteningMap i) :=
+    ContDiff ℝ (⊤ : ℕ∞) (M.halfSpaceFlatteningMap i) :=
   (Coordinate.moveToZero i : ℝSpace d →L[ℝ] ℝSpace d).contDiff.comp
     (M.contDiff_flatteningMap i)
 
@@ -126,8 +126,9 @@ theorem fderiv_flatteningMap (i : Fin d) (x : ℝSpace d) :
       simpa [flatteningMap] using
         (M.smooth_φ.differentiable (by simp)).differentiableAt.neg
     · simpa [flatteningMap, hji] using
-        ((contDiff_apply ℝ ℝ j).differentiable
-          (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
+        (((contDiff_apply ℝ ℝ j :
+          ContDiff ℝ (⊤ : ℕ∞) fun x : ℝSpace d => x j).differentiable
+            (by simp)).differentiableAt)
 
 /-- The flattening map has derivative equal to its `fderiv`. -/
 theorem hasFDerivAt_flatteningMap (i : Fin d) (x : ℝSpace d) :

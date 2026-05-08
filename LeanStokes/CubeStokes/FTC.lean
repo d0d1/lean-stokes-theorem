@@ -70,7 +70,7 @@ For a smooth function `f : ℝ → ℝ` and `a ≤ b`:
 
 stated in the `Fin 1 → ℝ` coordinate framework. -/
 theorem ftc_stokes (f : ℝ → ℝ) (a b : ℝ) (hab : a ≤ b)
-    (hf : ContDiff ℝ ⊤ f) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) :
     (∫ x in Icc (fun _ : Fin 1 => a) (fun _ : Fin 1 => b),
       deriv f (x 0)) = f b - f a := by
   set ω : CoordNForm 0 := fun _ x => f (x 0) with hω_def

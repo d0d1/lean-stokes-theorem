@@ -29,7 +29,7 @@ theorem halfSpaceBoxStokes_pullback_of_vanishesOnArtificialFaces
     (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hf : ContDiff ℝ ⊤ f) (hω : ContDiff ℝ ⊤ ω)
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hvanish : VanishesOnBoxArtificialFaces (DiffForm.pullback f ω) a b) :
     DiffForm.integral (DiffForm.pullback f (DiffForm.extd ω)) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f ω)
@@ -48,7 +48,7 @@ theorem halfSpaceBoxStokes_pullback_of_eq_zero_on_boxArtificialFaces
     (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hf : ContDiff ℝ ⊤ f) (hω : ContDiff ℝ ⊤ ω)
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hzero : ∀ y ∈ boxArtificialFaces a b, DiffForm.pullback f ω y = 0) :
     DiffForm.integral (DiffForm.pullback f (DiffForm.extd ω)) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f ω)
@@ -64,7 +64,7 @@ theorem halfSpaceBoxStokes_pullback_of_disjoint_support_boxArtificialFaces
     (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hf : ContDiff ℝ ⊤ f) (hω : ContDiff ℝ ⊤ ω)
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hdisj : Disjoint (Function.support (DiffForm.pullback f ω)) (boxArtificialFaces a b)) :
     DiffForm.integral (DiffForm.pullback f (DiffForm.extd ω)) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f ω)
@@ -80,13 +80,13 @@ theorem halfSpaceBoxStokes_pullback_fsmul_of_disjoint_support_scalar_boxArtifici
     (f : ℝSpace (n + 1) → ℝSpace m) (χ : ℝSpace m → ℝ) (ω : DiffForm m n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
-    (hf : ContDiff ℝ ⊤ f) (hχ : ContDiff ℝ ⊤ χ) (hω : ContDiff ℝ ⊤ ω)
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hχ : ContDiff ℝ (⊤ : ℕ∞) χ) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
     (hdisj : Disjoint (Function.support (χ ∘ f)) (boxArtificialFaces a b)) :
     DiffForm.integral (DiffForm.pullback f (DiffForm.extd (DiffForm.fsmul χ ω))) (Icc a b) =
       SmoothDomain.halfSpaceBoundaryIntegral n (DiffForm.pullback f (DiffForm.fsmul χ ω))
         (Icc (a ∘ Fin.succAbove (0 : Fin (n + 1)))
              (b ∘ Fin.succAbove (0 : Fin (n + 1)))) := by
-  have hχω : ContDiff ℝ ⊤ (DiffForm.fsmul χ ω) :=
+  have hχω : ContDiff ℝ (⊤ : ℕ∞) (DiffForm.fsmul χ ω) :=
     DiffForm.isSmooth_fsmul hχ hω
   have hdisj_form :
       Disjoint (Function.support (DiffForm.pullback f (DiffForm.fsmul χ ω)))

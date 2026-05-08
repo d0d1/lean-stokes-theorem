@@ -125,7 +125,7 @@ theorem face_matching (σ : SmoothSingularCube (n + 1) m)
   congr 1
   funext j
   have hσ_diff : DifferentiableAt ℝ σ.toFun (faceInclusion i ε x) :=
-    (σ.smooth.differentiable (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
+    (σ.smooth.differentiable (by simp)).differentiableAt
   have hface_diff : DifferentiableAt ℝ (faceInclusion i ε) x :=
     (faceInclusion_differentiable i ε).differentiableAt
   have hchain : fderiv ℝ (σ.toFun ∘ faceInclusion i ε) x =

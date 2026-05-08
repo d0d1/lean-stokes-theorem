@@ -27,11 +27,11 @@ variable {m n : ℕ}
 /-- Pulling back a smooth form along a smooth map has smooth coordinate coefficients. -/
 theorem toCoordNForm_pullback_isSmooth
     (f : ℝSpace (n + 1) → ℝSpace m) (ω : DiffForm m n)
-    (hf : ContDiff ℝ ⊤ f) (hω : ContDiff ℝ ⊤ ω) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     IsSmooth (toCoordNForm (DiffForm.pullback f ω)) := by
   intro i
   unfold DiffForm.pullback toCoordNForm
-  change ContDiff ℝ ⊤ (fun x =>
+  change ContDiff ℝ (⊤ : ℕ∞) (fun x =>
     (ω (f x)) (fun k => fderiv ℝ f x (Pi.single (Fin.succAbove i k) 1)))
   have h_eq : (fun x =>
       (ω (f x)) (fun k => fderiv ℝ f x (Pi.single (Fin.succAbove i k) 1))) =
@@ -44,8 +44,8 @@ theorem toCoordNForm_pullback_isSmooth
   · exact (ContinuousAlternatingMap.toContinuousMultilinearMapCLM ℝ
       ).contDiff.comp (hω.comp hf)
   · intro k
-    have hfderiv : ContDiff ℝ ⊤ (fderiv ℝ f) :=
-      hf.fderiv_right (by simp : (⊤ : WithTop ℕ∞) + 1 ≤ ⊤)
+    have hfderiv : ContDiff ℝ (⊤ : ℕ∞) (fderiv ℝ f) :=
+      hf.fderiv_right (by simp)
     exact hfderiv.clm_apply contDiff_const
 
 end CubeStokes

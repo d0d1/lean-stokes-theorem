@@ -20,7 +20,7 @@ Defines smooth singular cubes and their face maps for singular cubical Stokes.
 
 ## Design
 
-We use globally smooth maps (ContDiff ℝ ⊤) and integrate over [0,1]^n.
+We use globally smooth maps (ContDiff ℝ (⊤ : ℕ∞)) and integrate over [0,1]^n.
 The pullback here is the TRUE differential-form pullback via fderiv.
 -/
 
@@ -37,7 +37,7 @@ variable {n m : ℕ}
 @[ext]
 structure SmoothSingularCube (n m : ℕ) where
   toFun : (Fin n → ℝ) → (Fin m → ℝ)
-  smooth : ContDiff ℝ ⊤ toFun
+  smooth : ContDiff ℝ (⊤ : ℕ∞) toFun
 
 instance : CoeFun (SmoothSingularCube n m) (fun _ => (Fin n → ℝ) → (Fin m → ℝ)) :=
   ⟨SmoothSingularCube.toFun⟩
@@ -56,10 +56,10 @@ def faceInclusion {n : ℕ} (i : Fin (n + 1)) (ε : ℝ) (t : Fin n → ℝ) : F
 
 /-- Each component of faceInclusion is smooth (constant or projection). -/
 theorem faceInclusion_contDiff {n : ℕ} (i : Fin (n + 1)) (ε : ℝ) :
-    ContDiff ℝ ⊤ (faceInclusion i ε) := by
+    ContDiff ℝ (⊤ : ℕ∞) (faceInclusion i ε) := by
   apply contDiff_pi.mpr
   intro j
-  show ContDiff ℝ ⊤ fun t => faceInclusion i ε t j
+  show ContDiff ℝ (⊤ : ℕ∞) fun t => faceInclusion i ε t j
   simp only [faceInclusion]
   split_ifs with h1 h2
   · -- j < i: this is fun t => t ⟨j, _⟩

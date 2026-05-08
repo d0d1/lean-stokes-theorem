@@ -19,7 +19,7 @@ noncomputable section
 
 namespace CubeStokes
 
-private lemma continuous_deriv_of_contDiff (f : ℝ → ℝ) (hf : ContDiff ℝ ⊤ f) :
+private lemma continuous_deriv_of_contDiff (f : ℝ → ℝ) (hf : ContDiff ℝ (⊤ : ℕ∞) f) :
     Continuous (deriv f) := by
   have hcf : Continuous (fderiv ℝ f) := hf.continuous_fderiv (by simp)
   have heq : (fun x => (fderiv ℝ f x) (1 : ℝ)) = deriv f := by
@@ -32,14 +32,14 @@ private lemma continuous_deriv_of_contDiff (f : ℝ → ℝ) (hf : ContDiff ℝ 
 For smooth `f, g : ℝ → ℝ` and `a ≤ b`:
   `∫_{[a,b]} f·g' = f(b)g(b) - f(a)g(a) - ∫_{[a,b]} f'·g` -/
 theorem integration_by_parts (f g : ℝ → ℝ) (a b : ℝ) (hab : a ≤ b)
-    (hf : ContDiff ℝ ⊤ f) (hg : ContDiff ℝ ⊤ g) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hg : ContDiff ℝ (⊤ : ℕ∞) g) :
     (∫ x in Icc (fun _ : Fin 1 => a) (fun _ : Fin 1 => b),
       f (x 0) * deriv g (x 0)) =
     f b * g b - f a * g a -
     (∫ x in Icc (fun _ : Fin 1 => a) (fun _ : Fin 1 => b),
       deriv f (x 0) * g (x 0)) := by
   -- FTC applied to f*g
-  have hfg : ContDiff ℝ ⊤ (fun x => f x * g x) := hf.mul hg
+  have hfg : ContDiff ℝ (⊤ : ℕ∞) (fun x => f x * g x) := hf.mul hg
   have ftc_fg := ftc_stokes (fun x => f x * g x) a b hab hfg
   -- Product rule: (f*g)' = f'*g + f*g'
   have hprod : ∀ x, deriv (fun y => f y * g y) x = deriv f x * g x + f x * deriv g x := by

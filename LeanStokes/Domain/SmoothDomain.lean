@@ -22,7 +22,7 @@ open Topology Filter Set
 /-- A smooth domain with boundary in ℝᵈ. -/
 structure SmoothDomain (d : ℕ) where
   φ : ℝSpace d → ℝ
-  smooth_φ : ContDiff ℝ ⊤ φ
+  smooth_φ : ContDiff ℝ (⊤ : ℕ∞) φ
   isCompact : IsCompact {x : ℝSpace d | φ x ≤ 0}
   regular : ∀ x : ℝSpace d, φ x = 0 → fderiv ℝ φ x ≠ 0
 

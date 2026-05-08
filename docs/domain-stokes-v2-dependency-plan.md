@@ -23,7 +23,7 @@ theorem smoothDomain_stokes
     {d : ℕ} [NeZero d]
     (M : SmoothDomain d)
     (ω : DiffForm d (d - 1))
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     DiffForm.integral (DiffForm.extd ω) M.carrier =
       M.boundaryIntegral ω
 ```

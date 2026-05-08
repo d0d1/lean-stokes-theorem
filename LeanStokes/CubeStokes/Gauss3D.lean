@@ -51,7 +51,7 @@ For smooth F : ℝ³ → ℝ³ and box [a, b]:
 The right-hand side is the boundary integral with the sign-compensated form
 (each component pre-multiplied by (-1)^i to cancel the exterior derivative sign). -/
 theorem gauss_3d (F : (Fin 3 → ℝ) → Fin 3 → ℝ) (a b : Fin 3 → ℝ) (hab : a ≤ b)
-    (hF : ∀ i, ContDiff ℝ ⊤ (fun x => F x i)) :
+    (hF : ∀ i, ContDiff ℝ (⊤ : ℕ∞) (fun x => F x i)) :
     (∫ x in Icc a b, divergence F x) =
     bdryIntegral (fun i y => (-1 : ℝ) ^ (i : ℕ) * F y i) a b :=
   divergence_stokes F a b hab hF

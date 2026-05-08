@@ -36,17 +36,19 @@ namespace CubeStokes
 `∫ x in a..b, deriv f x = f b - f a`. Direct from
 `intervalIntegral.integral_eq_sub_of_hasDerivAt`. -/
 theorem ftc_intervalIntegral (f : ℝ → ℝ) (a b : ℝ) (hab : a ≤ b)
-    (hf : ContDiff ℝ ⊤ f) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) :
     ∫ x in a..b, deriv f x = f b - f a := by
   apply integral_eq_sub_of_hasDerivAt
   · intro x _
     exact (hf.differentiable (by norm_num)).differentiableAt.hasDerivAt
-  · exact ((hf.of_le le_top).continuous_deriv le_rfl).continuousOn.intervalIntegrable
+  · exact ((hf.of_le (by
+      exact WithTop.coe_le_coe.mpr (le_top : (1 : ℕ∞) ≤ ⊤)
+    )).continuous_deriv le_rfl).continuousOn.intervalIntegrable
 
 /-- The Stokes-derived integral (set integral over `Fin 1 → ℝ` of `fderiv`)
 equals `f b - f a`. Uses `fderiv_deriv` to align with `ftc_stokes`. -/
 theorem stokes_lhs_eq_intervalIntegral (f : ℝ → ℝ) (a b : ℝ) (hab : a ≤ b)
-    (hf : ContDiff ℝ ⊤ f) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) :
     (∫ x : Fin 1 → ℝ in Icc (fun _ => a) (fun _ => b),
       fderiv ℝ f (x 0) 1) = f b - f a := by
   have heq : (fun x : Fin 1 → ℝ => (fderiv ℝ f (x 0)) (1 : ℝ)) =
@@ -61,7 +63,7 @@ theorem stokes_lhs_eq_intervalIntegral (f : ℝ → ℝ) (a b : ℝ) (hab : a �
 
 The theorem shows the Stokes-derived LHS equals the interval integral. -/
 theorem ftc_paths_agree (f : ℝ → ℝ) (a b : ℝ) (hab : a ≤ b)
-    (hf : ContDiff ℝ ⊤ f) :
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) :
     (∫ x : Fin 1 → ℝ in Icc (fun _ => a) (fun _ => b),
       fderiv ℝ f (x 0) 1) =
     ∫ x in a..b, deriv f x := by

@@ -44,22 +44,25 @@ This is the key identity that reduces singular Stokes to box Stokes.
 It follows directly from mathlib's `extDeriv_pullback`. -/
 theorem pullback_extDeriv (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) (x : Fin (n + 1) → ℝ) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) (x : Fin (n + 1) → ℝ) :
     extDeriv (pullbackForm σ ω) x =
     (extDeriv ω (σ.toFun x)).compContinuousLinearMap (fderiv ℝ σ.toFun x) := by
   -- pullbackForm σ ω x = (ω(σ x)).compCLM(fderiv ℝ σ x)
   -- This has exactly the form that extDeriv_pullback handles:
   -- extDeriv (fun x => (ω(f x)).compCLM(fderiv f x)) x = (extDeriv ω (f x)).compCLM(fderiv f x)
   have hω_diff : DifferentiableAt ℝ ω (σ.toFun x) :=
-    (hω.differentiable (by simp : (⊤ : WithTop ℕ∞) ≠ 0)).differentiableAt
-  have hσ_smooth : ContDiffAt ℝ ⊤ σ.toFun x := σ.smooth.contDiffAt
-  exact extDeriv_pullback hω_diff hσ_smooth (by simp)
+    (hω.differentiable (by simp)).differentiableAt
+  have hσ_smooth : ContDiffAt ℝ (⊤ : ℕ∞) σ.toFun x := σ.smooth.contDiffAt
+  exact extDeriv_pullback hω_diff hσ_smooth (by
+    simpa [minSmoothness_of_isRCLikeNormedField] using
+      (WithTop.coe_le_coe.mpr (le_top : (2 : ℕ∞) ≤ ⊤) :
+        (↑(2 : ℕ∞) : WithTop ℕ∞) ≤ (↑(⊤ : ℕ∞) : WithTop ℕ∞)))
 
 /-- The pullback of dω equals the exterior derivative of the pullback of ω,
 expressed via `pullbackForm`. -/
 theorem pullbackForm_extDeriv_eq (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) (x : Fin (n + 1) → ℝ) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) (x : Fin (n + 1) → ℝ) :
     pullbackForm σ (fun y => extDeriv ω y) x = extDeriv (pullbackForm σ ω) x := by
   -- LHS = (extDeriv ω (σ x)).compCLM(fderiv ℝ σ x)
   -- RHS = extDeriv(pullbackForm σ ω) x = same thing by pullback_extDeriv
@@ -81,7 +84,7 @@ This is the singular cubical Stokes theorem reduced to our existing
 box Stokes infrastructure. -/
 theorem singularStokes_abstract (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     integrateForm σ (fun y => extDeriv ω y) =
     CubeStokes.bdryIntegral
       (CubeStokes.toCoordNForm (pullbackForm σ ω))
@@ -117,7 +120,7 @@ This expresses the singular cubical Stokes theorem with explicit boundary orient
 The sign (-1)ⁱ comes from the boundary orientation of the i-th face pair. -/
 theorem singularStokes (σ : SmoothSingularCube (n + 1) m)
     (ω : (Fin m → ℝ) → (Fin m → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     integrateForm σ (fun y => extDeriv ω y) =
     ∑ i : Fin (n + 1),
       (-1 : ℝ) ^ (i : ℕ) *

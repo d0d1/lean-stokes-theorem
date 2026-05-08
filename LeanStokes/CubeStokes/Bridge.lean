@@ -66,11 +66,11 @@ theorem extDeriv_topCoeff_eq_extDerivCoord
 extracted coordinate coefficients are also smooth. -/
 theorem toCoordNForm_smooth
     (ω : (Fin (n + 1) → ℝ) → (Fin (n + 1) → ℝ) [⋀^Fin n]→L[ℝ] ℝ)
-    (hω : ContDiff ℝ ⊤ ω) :
+    (hω : ContDiff ℝ (⊤ : ℕ∞) ω) :
     IsSmooth (toCoordNForm ω) := by
   intro i
-  show ContDiff ℝ ⊤ (fun x => (ω x) (fun k => Pi.single (Fin.succAbove i k) 1))
-  change ContDiff ℝ ⊤ ((ContinuousAlternatingMap.apply ℝ (Fin (n + 1) → ℝ) ℝ
+  show ContDiff ℝ (⊤ : ℕ∞) (fun x => (ω x) (fun k => Pi.single (Fin.succAbove i k) 1))
+  change ContDiff ℝ (⊤ : ℕ∞) ((ContinuousAlternatingMap.apply ℝ (Fin (n + 1) → ℝ) ℝ
     (fun k => Pi.single (Fin.succAbove i k) 1)) ∘ ω)
   exact (ContinuousAlternatingMap.apply ℝ (Fin (n + 1) → ℝ) ℝ
     (fun k => Pi.single (Fin.succAbove i k) 1)).contDiff.comp hω
