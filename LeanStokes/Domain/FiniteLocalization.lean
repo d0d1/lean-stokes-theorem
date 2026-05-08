@@ -232,10 +232,9 @@ theorem carrierIntegral_eq_boundaryContribution (Q : BoundaryLocalizedStokesPiec
       DiffForm.integral (DiffForm.extd (DiffForm.fsmul Q.χ ω)) Q.U =
         Q.boundaryContribution := by
     have hlocal_raw :=
-      Q.P.integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_model_box_of_disjoint_support_scalar
+      Q.P.integral_extd_fsmul_eq_localBoundaryIntegral_of_box_of_disjoint_support_scalar
         Q.χ ω Q.a Q.b Q.U_measurable Q.U_subset_patch Q.flattening_image_eq_box
-        Q.box_le Q.box_zero_low Q.scalar_smooth hω Q.model_pullback_differentiable
-        Q.model_coord_smooth Q.scalar_support_disjoint_artificial
+        Q.box_le Q.box_zero_low Q.scalar_smooth hω Q.scalar_support_disjoint_artificial
     simpa [BoundaryLocalizedStokesPiece.boundaryContribution,
       BoundaryLocalizedStokesPiece.boundaryTail,
       BoundaryLocalizedStokesPiece.boundaryTail_subset_localCoordDomain] using hlocal_raw

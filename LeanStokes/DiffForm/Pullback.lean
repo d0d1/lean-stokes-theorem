@@ -76,6 +76,23 @@ theorem pullback_comp
   funext x
   exact pullback_comp_apply f g η (hf (g x)) (hg x)
 
+/-- Pullback of a locally smooth differential form along a locally smooth map is differentiable
+at the point.
+
+Both hypotheses are ambient `ContDiffAt` assumptions at the relevant points; this is not a
+relative smoothness statement on a chart target. -/
+theorem pullback_differentiableAt (f : ℝSpace n → ℝSpace m) (η : DiffForm m k)
+    {x : ℝSpace n}
+    (hf : ContDiffAt ℝ (⊤ : ℕ∞) f x)
+    (hη : ContDiffAt ℝ (⊤ : ℕ∞) η (f x)) :
+    DifferentiableAt ℝ (pullback f η) x := by
+  unfold pullback
+  apply DifferentiableAt.continuousAlternatingMapCompContinuousLinearMap
+  · exact (hη.comp x hf).differentiableAt (by simp)
+  · have hfderiv : ContDiffAt ℝ (⊤ : ℕ∞) (fderiv ℝ f) x :=
+      hf.fderiv_right (m := (⊤ : ℕ∞)) (by simp)
+    exact hfderiv.differentiableAt (by simp)
+
 /-- Pullback of a smooth differential form along a smooth map is differentiable as an
 alternating-map-valued function. -/
 theorem pullback_differentiable (f : ℝSpace n → ℝSpace m) (η : DiffForm m k)

@@ -4,6 +4,7 @@ Released under GPL-3.0-only license as described in the file LICENSE.
 Authors: LeanStokes Contributors
 -/
 import LeanStokes.Domain.BoundaryChartPatchModelIntegral
+import LeanStokes.CubeStokes.PullbackSmooth
 import LeanStokes.Domain.BoxStokes
 import LeanStokes.DiffForm.Localization
 
@@ -11,10 +12,10 @@ import LeanStokes.DiffForm.Localization
 # Boundary Chart Patch Stokes Bridges
 
 This module combines half-space box Stokes in model coordinates with the
-patch-local boundary integral bridge.  The theorem below is still an analytic
-chart-symm box bridge: smoothness of the total model pullback and artificial-face
-vanishing remain explicit hypotheses.  It does not define a chart-independent
-boundary integral, solve localization, or prove global domain Stokes.
+patch-local boundary integral bridge.  The chart inverse is used only through
+ambient `ContDiffAt` hypotheses on the model box; artificial-face vanishing
+remains explicit.  It does not define a chart-independent boundary integral,
+solve localization, or prove global domain Stokes.
 -/
 
 noncomputable section
@@ -27,17 +28,13 @@ namespace BoundaryChartPatch
 
 variable {n : ℕ} {M : SmoothDomain (n + 1)} {x : ℝSpace (n + 1)}
 
-/-- Half-space box Stokes through an inverse boundary-flattening chart, with explicit analytic
-regularity and artificial-face hypotheses for the model pullback form. -/
-theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differentiable
+/-- Half-space box Stokes through an inverse boundary-flattening chart from local chart-inverse
+smoothness on the model box and artificial-face vanishing for the model pullback form. -/
+theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_contDiffAt_box
     (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (hmodel_diff :
-      Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
-    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω)))
     (hdiffBox : ∀ z ∈ Icc a b,
       ContDiffAt ℝ (⊤ : ℕ∞) (M.halfSpaceFlatteningChart P.i x P.h).symm z)
     (hvanish : CubeStokes.VanishesOnBoxArtificialFaces
@@ -68,10 +65,23 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differenti
   have hbox :
       DiffForm.integral (DiffForm.extd (DiffForm.pullback e.symm ω)) (Icc a b) =
         halfSpaceBoundaryIntegral n (DiffForm.pullback e.symm ω) S := by
+    have hmodel_diff_at :
+        ∀ z ∈ Icc a b, DifferentiableAt ℝ (DiffForm.pullback e.symm ω) z := by
+      intro z hz
+      exact DiffForm.pullback_differentiableAt e.symm ω
+        (hdiffBox z hz) hω.contDiffAt
+    have hcoord :
+        ∀ i, ∀ z ∈ Icc a b,
+          ContDiffAt ℝ (⊤ : ℕ∞)
+            ((CubeStokes.toCoordNForm (DiffForm.pullback e.symm ω)) i) z := by
+      intro i z hz
+      exact CubeStokes.toCoordNForm_pullback_contDiffAt e.symm ω
+        (hdiffBox z hz) hω.contDiffAt i
     simpa [e, S] using
-      CubeStokes.halfSpaceBoxStokes_of_vanishesOnArtificialFaces_of_differentiable
+      CubeStokes.halfSpaceBoxStokes_of_diffAt_coordContDiffAt_box_of_vanishes
         (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω)
-        a b hle ha0 hmodel_diff hcoord hvanish
+        a b hle ha0 (by simpa [e] using hmodel_diff_at)
+        (by simpa [e] using hcoord) hvanish
   have hboundary :
       halfSpaceBoundaryIntegral n (DiffForm.pullback e.symm ω) S =
         P.sign.domainSign * P.localBoundaryIntegral ω S hSsub := by
@@ -82,18 +92,14 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differenti
   rw [hbulk, hbox, hboundary]
 
 /-- Half-space box Stokes through an inverse boundary-flattening chart, using full model-box
-containment in the certified patch to discharge the inverse-chart smoothness and boundary-coordinate
-validity side conditions.  The analytic regularity and artificial-face hypotheses for the model
-pullback form remain explicit. -/
+containment in the certified patch to discharge inverse-chart smoothness and boundary-coordinate
+validity side conditions.  Artificial-face vanishing for the model pullback form
+remains explicit. -/
 theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_subset
     (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
     (a b : ℝSpace (n + 1))
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (hmodel_diff :
-      Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
-    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω)))
     (hvanish : CubeStokes.VanishesOnBoxArtificialFaces
       (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω) a b)
     (hboxsub : Icc a b ⊆ { z |
@@ -114,15 +120,14 @@ theorem halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_
       (by simpa [e] using hzpatch.1) (by simpa [e] using hzpatch.2)
   let hSsub := P.tailBox_subset_localCoordDomain_of_model_box_subset a b hle ha0 hboxsub
   simpa [e, hSsub] using
-    P.halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_differentiable
-      ω a b hle ha0 hω hmodel_diff hcoord
-      (by simpa [e] using hdiffBox) hvanish hSsub
+    P.halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_contDiffAt_box
+      ω a b hle ha0 hω (by simpa [e] using hdiffBox) hvanish hSsub
 
 /-- Local Stokes on an original patch set whose flattening image is a model half-space box.
 
 The theorem combines signed top-form change of variables, the model-box Stokes bridge, and the
-local boundary chart integral.  It remains local to one certified patch and keeps the analytic
-regularity and artificial-face hypotheses for the model pullback explicit. -/
+local boundary chart integral.  It remains local to one certified patch and keeps the
+artificial-face hypothesis for the model pullback explicit. -/
 theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
     (P : BoundaryChartPatch M x) (ω : DiffForm (n + 1) n)
     {U : Set (ℝSpace (n + 1))} (a b : ℝSpace (n + 1))
@@ -130,10 +135,6 @@ theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
     (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b)
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
     (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (hmodel_diff :
-      Differentiable ℝ (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω))
-    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω)))
     (hvanish : CubeStokes.VanishesOnBoxArtificialFaces
       (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm ω) a b) :
     DiffForm.integral (DiffForm.extd ω) U =
@@ -199,7 +200,7 @@ theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
         P.sign.domainSign * P.localBoundaryIntegral ω S hSsub := by
     simpa [η, e, S, hboxsub, hSsub] using
       P.halfSpaceBoxStokes_chart_symm_of_vanishesOnArtificialFaces_of_model_box_subset
-        ω a b hle ha0 hω hmodel_diff hcoord hvanish hboxsub
+        ω a b hle ha0 hω hvanish hboxsub
   have heq :
       P.sign.domainSign * DiffForm.integral (DiffForm.extd ω) U =
         P.sign.domainSign * P.localBoundaryIntegral ω S hSsub := by
@@ -215,19 +216,13 @@ theorem integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
 The scalar support condition is stated in model coordinates, so it only discharges artificial-face
 vanishing for the half-space box.  This theorem does not use an exterior-derivative product rule:
 it applies the local theorem to the single form `χ • ω`. -/
-theorem integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_model_box_of_disjoint_support_scalar
+theorem integral_extd_fsmul_eq_localBoundaryIntegral_of_box_of_disjoint_support_scalar
     (P : BoundaryChartPatch M x) (χ : ℝSpace (n + 1) → ℝ) (ω : DiffForm (n + 1) n)
     {U : Set (ℝSpace (n + 1))} (a b : ℝSpace (n + 1))
     (hUmeas : MeasurableSet U) (hUsub : U ⊆ P.U)
     (himage : M.halfSpaceFlatteningMap P.i '' U = Icc a b)
     (hle : a ≤ b) (ha0 : a (0 : Fin (n + 1)) = 0)
     (hχ : ContDiff ℝ (⊤ : ℕ∞) χ) (hω : ContDiff ℝ (⊤ : ℕ∞) ω)
-    (hmodel_diff :
-      Differentiable ℝ
-        (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm (DiffForm.fsmul χ ω)))
-    (hcoord : CubeStokes.IsSmooth (CubeStokes.toCoordNForm
-      (DiffForm.pullback (M.halfSpaceFlatteningChart P.i x P.h).symm
-        (DiffForm.fsmul χ ω))))
     (hdisj : Disjoint
       (Function.support (χ ∘ (M.halfSpaceFlatteningChart P.i x P.h).symm))
       (CubeStokes.boxArtificialFaces a b)) :
@@ -253,8 +248,6 @@ theorem integral_extd_fsmul_eq_localBoundaryIntegral_of_flattening_image_eq_mode
   simpa [e] using
     P.integral_extd_eq_localBoundaryIntegral_of_flattening_image_eq_model_box
       (DiffForm.fsmul χ ω) a b hUmeas hUsub himage hle ha0 hχω
-      (by simpa [e] using hmodel_diff)
-      (by simpa [e] using hcoord)
       (by simpa [e] using hvanish)
 
 end BoundaryChartPatch
